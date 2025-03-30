@@ -113,7 +113,7 @@ const LoadingScreen = () => (
     style={{ 
       height: '100vh', 
       width: '100%',
-      background: 'linear-gradient(135deg, #fdf8f1 0%, #fff9e6 100%)'
+      background: 'linear-gradient(135deg, #FFFFFF 0%, #fdf8f1 100%)'
     }}
   >
     <Stack align="center" spacing="md">

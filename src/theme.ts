@@ -92,19 +92,19 @@ export const theme = createTheme({
   defaultRadius: 'md',
   
   other: {
-    backgroundGradient: 'linear-gradient(135deg, #fdf8f1 0%, #fff9e6 100%)', // Warm cream gradient
+    backgroundGradient: 'linear-gradient(135deg, #FFFFFF 0%, #fdf8f1 100%)', // Subtle warm cream gradient
     cardBackgroundLight: '#FFFFFF',
     cardShadow: '0 8px 20px rgba(171, 83, 0, 0.07), 0 2px 8px rgba(171, 83, 0, 0.05)',
     cardShadowHover: '0 12px 24px rgba(171, 83, 0, 0.10), 0 4px 12px rgba(171, 83, 0, 0.07)',
     borderColor: 'rgba(171, 83, 0, 0.15)',
-    paperBackground: 'rgba(255, 255, 255, 0.9)'
+    paperBackground: '#FFFFFF'
   },
   
   components: {
     AppShell: {
       styles: {
         main: {
-          background: 'linear-gradient(135deg, #fdf8f1 0%, #fff9e6 100%)'
+          background: 'linear-gradient(135deg, #FFFFFF 0%, #fdf8f1 100%)'
         }
       }
     },
@@ -147,9 +147,19 @@ export const theme = createTheme({
           transition: 'all 0.3s ease',
           '&:hover': {
             boxShadow: '0 12px 24px rgba(171, 83, 0, 0.10), 0 4px 12px rgba(171, 83, 0, 0.07)',
+          },
+          '&[data-recipe-card]': {
+            backgroundColor: '#FFFFFF',
+            borderLeft: '4px solid #fd9d42',
           }
         },
       },
+      variants: {
+        recipe: {
+          backgroundColor: '#FFFFFF',
+          borderLeft: '4px solid #fd9d42',
+        }
+      }
     },
     
     Paper: {
@@ -160,7 +170,7 @@ export const theme = createTheme({
       },
       styles: {
         root: {
-          backgroundColor: 'rgba(255, 255, 255, 0.9)',
+          backgroundColor: '#FFFFFF',
           backdropFilter: 'blur(10px)',
           borderColor: 'rgba(171, 83, 0, 0.15)',
           boxShadow: '0 8px 20px rgba(171, 83, 0, 0.07), 0 2px 8px rgba(171, 83, 0, 0.05)',
@@ -174,7 +184,7 @@ export const theme = createTheme({
     
     Badge: {
       defaultProps: {
-        variant: 'light',
+        variant: 'filled',
         color: 'pumpkinOrange',
       },
       styles: {
@@ -182,6 +192,7 @@ export const theme = createTheme({
           textTransform: 'none',
           fontSize: '0.85rem',
           fontWeight: 600,
+          color: 'white',
         },
       },
     },
