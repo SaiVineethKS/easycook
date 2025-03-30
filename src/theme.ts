@@ -1,87 +1,102 @@
 import { createTheme, MantineColorsTuple } from '@mantine/core';
 
-// Main primary color palette - Deep teal
-const deepTeal: MantineColorsTuple = [
-  "#eaf2f4",
-  "#d5e5e9",
-  "#afd2da",
-  "#88c0ca",
-  "#6aafbb",
-  "#4da1b0",
-  "#3092a2",
-  "#1f7a8a",
-  "#006777",
-  "#005566"
+// Primary color - Pumpkin Orange (warm, appetizing orange)
+const pumpkinOrange: MantineColorsTuple = [
+  "#fff3e6",
+  "#ffe2c6",
+  "#ffd1a8",
+  "#ffbf86",
+  "#ffae64", 
+  "#fd9d42", // Main brand color
+  "#f88d20",
+  "#e07712",
+  "#c76407",
+  "#ab5300"
 ];
 
-// Secondary color - Berry Purple
-const berryPurple: MantineColorsTuple = [
-  "#f8ecff",
-  "#ead9f4",
-  "#d5b9e7",
-  "#bf97d9",
-  "#ab79cd",
-  "#9d65c5",
-  "#9458bf",
-  "#7e46ab",
-  "#6e3999",
-  "#5e2c88"
+// Secondary color - Olive Green (herb-inspired)
+const herbGreen: MantineColorsTuple = [
+  "#f2f8e8",
+  "#e3efd2",
+  "#d3e4b8",
+  "#c3d99e",
+  "#b2ce83",
+  "#a1c368",
+  "#91b74e",
+  "#7b9d3c",
+  "#69882d",
+  "#56721d"
 ];
 
-// Accent color - Warm Coral
-const warmCoral: MantineColorsTuple = [
-  "#fff0ee",
-  "#ffd9d2",
-  "#ffc0b8",
-  "#ffa69c",
-  "#ff8c81",
-  "#ff7366",
-  "#ff594b",
-  "#e34538",
-  "#cd3428",
-  "#b91c15"
+// Accent color - Honey Gold (warm, appetizing golden tone)
+const honeyGold: MantineColorsTuple = [
+  "#fff9e6",
+  "#fff2cc",
+  "#ffe8a8",
+  "#ffdd84",
+  "#ffd35f",
+  "#ffc93a",
+  "#ffbe15",
+  "#e6a500",
+  "#cc9000",
+  "#b27c00"
 ];
 
-// Neutral tones
-const neutralGray: MantineColorsTuple = [
-  "#f8f9fa",
-  "#e9ecef",
-  "#dee2e6",
-  "#ced4da",
-  "#adb5bd",
-  "#6c757d",
-  "#495057",
-  "#343a40",
-  "#212529",
-  "#121416"
+// Complementary accent - Tomato Red (for attention/CTAs)
+const tomatoRed: MantineColorsTuple = [
+  "#ffecec",
+  "#ffd9d9",
+  "#ffc2c2",
+  "#ffa7a7",
+  "#ff8a8a",
+  "#ff7070",
+  "#ff5252",
+  "#e63939",
+  "#d12a2a",
+  "#bc1a1a"
+];
+
+// Neutral tones - Warm cream/kraft paper inspired
+const warmNeutral: MantineColorsTuple = [
+  "#fdf8f1", // Lightest cream - page background
+  "#f7f0e6",
+  "#efe5d7",
+  "#e6d9c7",
+  "#dcc9b0", // Medium kraft
+  "#c4b297",
+  "#ab987c",
+  "#8c7960",
+  "#70614d",
+  "#5b4f3f"  // Darkest brown - text color
 ];
 
 export const theme = createTheme({
-  primaryColor: 'deepTeal',
+  primaryColor: 'pumpkinOrange',
   colors: {
-    deepTeal,
-    berryPurple,
-    warmCoral,
-    neutralGray
+    pumpkinOrange,
+    herbGreen,
+    honeyGold,
+    tomatoRed,
+    warmNeutral
   },
   
   fontFamily: '"Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
   fontFamilyMonospace: '"JetBrains Mono", Monaco, Courier, monospace',
   headings: {
-    fontFamily: '"Quicksand", "Greycliff CF", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    fontFamily: '"Playfair Display", "Garamond", serif',
     fontWeight: '700',
   },
   
   white: '#ffffff',
-  black: '#212529',
+  black: '#5b4f3f', // Warm dark brown instead of pure black
   defaultRadius: 'md',
   
   other: {
-    backgroundGradient: 'linear-gradient(135deg, #E9F7F8 0%, #F7ECFF 100%)',
+    backgroundGradient: 'linear-gradient(135deg, #fdf8f1 0%, #fff9e6 100%)', // Warm cream gradient
     cardBackgroundLight: '#FFFFFF',
-    cardShadow: '0 8px 20px rgba(0, 103, 119, 0.08), 0 2px 8px rgba(0, 103, 119, 0.06)',
-    cardShadowHover: '0 12px 24px rgba(0, 103, 119, 0.12), 0 4px 12px rgba(0, 103, 119, 0.08)',
-    borderColor: 'rgba(0, 103, 119, 0.15)',
+    cardShadow: '0 8px 20px rgba(171, 83, 0, 0.07), 0 2px 8px rgba(171, 83, 0, 0.05)',
+    cardShadowHover: '0 12px 24px rgba(171, 83, 0, 0.10), 0 4px 12px rgba(171, 83, 0, 0.07)',
+    borderColor: 'rgba(171, 83, 0, 0.15)',
     paperBackground: 'rgba(255, 255, 255, 0.9)'
   },
   
@@ -89,7 +104,7 @@ export const theme = createTheme({
     AppShell: {
       styles: {
         main: {
-          background: 'linear-gradient(135deg, #E9F7F8 0%, #F7ECFF 100%)'
+          background: 'linear-gradient(135deg, #fdf8f1 0%, #fff9e6 100%)'
         }
       }
     },
@@ -104,7 +119,7 @@ export const theme = createTheme({
       defaultProps: {
         size: 'md',
         radius: 'md',
-        color: 'deepTeal',
+        color: 'pumpkinOrange',
         variant: 'filled',
       },
       styles: {
@@ -127,11 +142,11 @@ export const theme = createTheme({
       styles: {
         root: {
           backgroundColor: '#FFFFFF',
-          borderColor: 'rgba(0, 103, 119, 0.15)',
-          boxShadow: '0 8px 20px rgba(0, 103, 119, 0.08), 0 2px 8px rgba(0, 103, 119, 0.06)',
+          borderColor: 'rgba(171, 83, 0, 0.15)',
+          boxShadow: '0 8px 20px rgba(171, 83, 0, 0.07), 0 2px 8px rgba(171, 83, 0, 0.05)',
           transition: 'all 0.3s ease',
           '&:hover': {
-            boxShadow: '0 12px 24px rgba(0, 103, 119, 0.12), 0 4px 12px rgba(0, 103, 119, 0.08)',
+            boxShadow: '0 12px 24px rgba(171, 83, 0, 0.10), 0 4px 12px rgba(171, 83, 0, 0.07)',
           }
         },
       },
@@ -147,11 +162,11 @@ export const theme = createTheme({
         root: {
           backgroundColor: 'rgba(255, 255, 255, 0.9)',
           backdropFilter: 'blur(10px)',
-          borderColor: 'rgba(0, 103, 119, 0.15)',
-          boxShadow: '0 8px 20px rgba(0, 103, 119, 0.08), 0 2px 8px rgba(0, 103, 119, 0.06)',
+          borderColor: 'rgba(171, 83, 0, 0.15)',
+          boxShadow: '0 8px 20px rgba(171, 83, 0, 0.07), 0 2px 8px rgba(171, 83, 0, 0.05)',
           transition: 'all 0.3s ease',
           '&:hover': {
-            boxShadow: '0 12px 24px rgba(0, 103, 119, 0.12), 0 4px 12px rgba(0, 103, 119, 0.08)',
+            boxShadow: '0 12px 24px rgba(171, 83, 0, 0.10), 0 4px 12px rgba(171, 83, 0, 0.07)',
           }
         },
       },
@@ -160,7 +175,7 @@ export const theme = createTheme({
     Badge: {
       defaultProps: {
         variant: 'light',
-        color: 'deepTeal',
+        color: 'pumpkinOrange',
       },
       styles: {
         root: {
@@ -174,7 +189,7 @@ export const theme = createTheme({
     ActionIcon: {
       defaultProps: {
         variant: 'light',
-        color: 'deepTeal',
+        color: 'pumpkinOrange',
       },
       styles: {
         root: {
@@ -189,10 +204,10 @@ export const theme = createTheme({
     TextInput: {
       styles: {
         input: {
-          border: '1px solid rgba(0, 103, 119, 0.2)',
+          border: '1px solid rgba(171, 83, 0, 0.2)',
           backgroundColor: 'rgba(255, 255, 255, 0.8)',
           '&:focus': {
-            borderColor: '#3092a2',
+            borderColor: '#fd9d42',
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
           },
         },
@@ -202,10 +217,10 @@ export const theme = createTheme({
     Textarea: {
       styles: {
         input: {
-          border: '1px solid rgba(0, 103, 119, 0.2)',
+          border: '1px solid rgba(171, 83, 0, 0.2)',
           backgroundColor: 'rgba(255, 255, 255, 0.8)',
           '&:focus': {
-            borderColor: '#3092a2',
+            borderColor: '#fd9d42',
             backgroundColor: 'rgba(255, 255, 255, 0.95)',
           },
         },
@@ -215,7 +230,7 @@ export const theme = createTheme({
     Divider: {
       styles: {
         root: {
-          borderColor: 'rgba(0, 103, 119, 0.1)',
+          borderColor: 'rgba(171, 83, 0, 0.1)',
         },
       },
     },
@@ -224,7 +239,7 @@ export const theme = createTheme({
       styles: {
         item: {
           '&::marker': {
-            color: '#3092a2',
+            color: '#fd9d42',
           },
         },
       },
@@ -234,11 +249,9 @@ export const theme = createTheme({
       styles: {
         root: {
           '&[data-order="1"]': {
-            backgroundImage: 'linear-gradient(45deg, #006777, #6e3999)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            textShadow: '0 1px 2px rgba(0, 0, 0, 0.1)',
+            color: '#ab5300',
+            fontFamily: '"Playfair Display", serif',
+            letterSpacing: '-0.01em',
           }
         }
       }
@@ -247,15 +260,15 @@ export const theme = createTheme({
     Accordion: {
       styles: {
         item: {
-          borderColor: 'rgba(0, 103, 119, 0.1)',
+          borderColor: 'rgba(171, 83, 0, 0.1)',
         },
         control: {
           '&:hover': {
-            backgroundColor: 'rgba(0, 103, 119, 0.05)',
+            backgroundColor: 'rgba(171, 83, 0, 0.05)',
           }
         },
         chevron: {
-          color: '#3092a2',
+          color: '#fd9d42',
         }
       }
     },
@@ -264,15 +277,15 @@ export const theme = createTheme({
       styles: {
         root: {
           '& thead tr th': {
-            backgroundColor: 'rgba(0, 103, 119, 0.06)',
-            color: '#006777',
+            backgroundColor: 'rgba(171, 83, 0, 0.06)',
+            color: '#ab5300',
             fontWeight: 600,
           },
           '& tbody tr:nth-of-type(odd)': {
-            backgroundColor: 'rgba(0, 103, 119, 0.02)',
+            backgroundColor: 'rgba(171, 83, 0, 0.02)',
           },
           '& tbody tr:hover': {
-            backgroundColor: 'rgba(0, 103, 119, 0.04)',
+            backgroundColor: 'rgba(171, 83, 0, 0.04)',
           }
         }
       }
@@ -283,10 +296,10 @@ export const theme = createTheme({
         tab: {
           fontWeight: 600,
           '&[data-active]': {
-            borderColor: '#3092a2',
+            borderColor: '#fd9d42',
           },
           '&:hover': {
-            backgroundColor: 'rgba(0, 103, 119, 0.05)',
+            backgroundColor: 'rgba(171, 83, 0, 0.05)',
           }
         }
       }
@@ -295,11 +308,11 @@ export const theme = createTheme({
     Modal: {
       styles: {
         header: {
-          backgroundColor: 'rgba(0, 103, 119, 0.06)',
+          backgroundColor: 'rgba(171, 83, 0, 0.06)',
         },
         title: {
           fontWeight: 600,
-          color: '#006777',
+          color: '#ab5300',
         }
       }
     },
