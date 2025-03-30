@@ -1,13 +1,19 @@
+declare global {
+  interface Window {
+    webkitSpeechRecognition: any;
+  }
+}
+
 export class AudioService {
   private mediaRecorder: MediaRecorder | null = null;
   private audioChunks: Blob[] = [];
-  private recognition: SpeechRecognition | null = null;
-  private isRecording = false;
+  private recognition: any | null = null;
+  private stream: MediaStream | null = null;
 
   constructor() {
     // Initialize speech recognition
     if ('webkitSpeechRecognition' in window) {
-      this.recognition = new (window as any).webkitSpeechRecognition();
+      this.recognition = new window.webkitSpeechRecognition();
       this.recognition.continuous = true;
       this.recognition.interimResults = true;
       this.recognition.lang = 'en-US'; // Default to English
@@ -16,8 +22,8 @@ export class AudioService {
 
   async startRecording(): Promise<void> {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      this.mediaRecorder = new MediaRecorder(stream);
+      this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      this.mediaRecorder = new MediaRecorder(this.stream);
       this.audioChunks = [];
 
       this.mediaRecorder.ondataavailable = (event) => {
@@ -27,7 +33,7 @@ export class AudioService {
       };
 
       this.mediaRecorder.start();
-      this.isRecording = true;
+      console.log('Recording started');
 
       // Start speech recognition
       if (this.recognition) {
@@ -39,42 +45,32 @@ export class AudioService {
     }
   }
 
-  stopRecording(): Promise<string> {
+  stopRecording(): Promise<File> {
     return new Promise((resolve, reject) => {
-      if (!this.mediaRecorder || !this.isRecording) {
+      if (!this.mediaRecorder) {
         reject(new Error('No recording in progress'));
         return;
       }
 
-      let finalTranscript = '';
+      this.mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(this.audioChunks, { type: 'audio/wav' });
+        const audioFile = new File([audioBlob], 'recording.wav', { type: 'audio/wav' });
+        
+        // Clean up
+        if (this.stream) {
+          this.stream.getTracks().forEach(track => track.stop());
+          this.stream = null;
+        }
+        
+        resolve(audioFile);
+      };
 
-      if (this.recognition) {
-        this.recognition.onresult = (event) => {
-          for (let i = event.resultIndex; i < event.results.length; i++) {
-            const transcript = event.results[i][0].transcript;
-            if (event.results[i].isFinal) {
-              finalTranscript += transcript + ' ';
-            }
-          }
-        };
-
-        this.recognition.onend = () => {
-          this.mediaRecorder?.stop();
-          this.isRecording = false;
-          resolve(finalTranscript.trim());
-        };
-
-        this.recognition.stop();
-      } else {
-        this.mediaRecorder.stop();
-        this.isRecording = false;
-        resolve('');
-      }
+      this.mediaRecorder.stop();
     });
   }
 
-  isCurrentlyRecording(): boolean {
-    return this.isRecording;
+  isRecording(): boolean {
+    return this.mediaRecorder?.state === 'recording' || false;
   }
 
   setLanguage(lang: string): void {
