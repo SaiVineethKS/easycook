@@ -11,16 +11,36 @@ import {
   ScrollArea,
   Box,
   UnstyledButton,
-  rem
+  rem,
+  Tooltip,
+  ActionIcon,
+  TextInput
 } from '@mantine/core';
+import { IconSearch, IconShoppingCart } from '@tabler/icons-react';
 import { useStore } from '../store/useStore';
 import { format, addDays, isToday, isSameDay } from 'date-fns';
+import { IconCoffee, IconSoup, IconMoon } from '@tabler/icons-react';
 
 export const PlanningScreen = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [selectedMealType, setSelectedMealType] = useState<'breakfast' | 'lunch' | 'dinner'>('breakfast');
+  const [searchQuery, setSearchQuery] = useState('');
   const { recipes, addMealPlan, getMealPlanByDate } = useStore();
   const scrollRef = useRef<HTMLDivElement>(null);
+  
+  // Meal type icons with their labels
+  const mealIcons = {
+    breakfast: { icon: IconCoffee, label: 'Breakfast', color: 'orange' },
+    lunch: { icon: IconSoup, label: 'Lunch', color: 'blue' },
+    dinner: { icon: IconMoon, label: 'Dinner', color: 'indigo' }
+  };
+  
+  // Filter recipes based on search query
+  const filteredRecipes = recipes.filter(recipe => 
+    recipe.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    recipe.ingredients?.some(ing => 
+      ing.name.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  );
   
   // Generate dates for 3 months before and after current date (180 days total)
   const generateDates = () => {
@@ -43,18 +63,18 @@ export const PlanningScreen = () => {
     }
   }, []);
 
-  const handleAddMeal = (recipeId: string) => {
+  const handleAddMeal = (recipeId: string, mealType: 'breakfast' | 'lunch' | 'dinner') => {
     const dateStr = format(selectedDate, 'yyyy-MM-dd');
     const existingPlan = getMealPlanByDate(dateStr);
 
     if (existingPlan) {
       const updatedMeals = [...existingPlan.meals];
-      const mealIndex = updatedMeals.findIndex(meal => meal.type === selectedMealType);
+      const mealIndex = updatedMeals.findIndex(meal => meal.type === mealType);
       
       if (mealIndex >= 0) {
-        updatedMeals[mealIndex] = { type: selectedMealType, recipeId };
+        updatedMeals[mealIndex] = { type: mealType, recipeId };
       } else {
-        updatedMeals.push({ type: selectedMealType, recipeId });
+        updatedMeals.push({ type: mealType, recipeId });
       }
       
       addMealPlan({
@@ -64,9 +84,21 @@ export const PlanningScreen = () => {
     } else {
       addMealPlan({
         date: dateStr,
-        meals: [{ type: selectedMealType, recipeId }],
+        meals: [{ type: mealType, recipeId }],
       });
     }
+  };
+  
+  // Function to generate grocery list from current week's meal plans
+  const handleCreateGroceryList = () => {
+    // Get the current week's meal plans
+    alert("Grocery list feature coming soon! This will generate a shopping list based on your meal plan.");
+    
+    // In the future, this would:
+    // 1. Collect all recipes from the week's meal plans
+    // 2. Aggregate all ingredients with quantities
+    // 3. Optimize by combining similar items
+    // 4. Generate a printable/saveable grocery list
   };
 
   return (
@@ -152,44 +184,71 @@ export const PlanningScreen = () => {
           </ScrollArea>
         </Paper>
 
-        <Group mt="md">
-          {(['breakfast', 'lunch', 'dinner'] as const).map((type) => (
-            <Button
-              key={type}
-              variant={selectedMealType === type ? 'filled' : 'light'}
-              onClick={() => setSelectedMealType(type)}
-              radius="md"
-              size="md"
-            >
-              {type.charAt(0).toUpperCase() + type.slice(1)}
-            </Button>
-          ))}
+        <Box mt="xl" mb="md">
+          <TextInput
+            placeholder="Search recipes by name, ingredients, or 'show me pasta dishes with chicken'"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.currentTarget.value)}
+            leftSection={<IconSearch size={18} />}
+            size="md"
+            radius="md"
+            style={{ width: '100%' }}
+          />
+        </Box>
+        
+        <Group justify="space-between" align="center" mt="lg" mb="md">
+          <Title order={2}>Available Recipes</Title>
+          <Button
+            leftSection={<IconShoppingCart size={18} />}
+            onClick={handleCreateGroceryList}
+            variant="light"
+            color="green"
+            radius="md"
+            size="sm"
+          >
+            Create Grocery List
+          </Button>
         </Group>
-
-        <Title order={2} mt="md">Available Recipes</Title>
         
         {recipes.length === 0 ? (
-          <Paper p="xl" withBorder ta="center" c="dimmed">
+          <Paper p="xl" withBorder ta="center" c="dimmed" mt="md">
             <Text size="lg">No recipes available. Add some recipes in the Cookbook section.</Text>
           </Paper>
+        ) : filteredRecipes.length === 0 ? (
+          <Paper p="xl" withBorder ta="center" c="dimmed" mt="md">
+            <Text size="lg">No recipes match your search. Try different keywords.</Text>
+          </Paper>
         ) : (
-          recipes.map(recipe => (
+          filteredRecipes.map(recipe => (
             <Card key={recipe.id} shadow="sm" p="lg" mb="md" withBorder radius="md">
               <Group justify="space-between">
-                <Title order={3}>{recipe.title}</Title>
-                <Button 
-                  onClick={() => handleAddMeal(recipe.id)}
-                  radius="md"
-                  variant="light"
-                >
-                  Add to {selectedMealType}
-                </Button>
+                <Box>
+                  <Title order={3}>{recipe.title}</Title>
+                  {recipe.ingredients && (
+                    <Text c="dimmed" mt="xs" lineClamp={2}>
+                      {recipe.ingredients.length} ingredients • {recipe.procedure.length} steps
+                    </Text>
+                  )}
+                </Box>
+                <Group gap="sm">
+                  {(Object.entries(mealIcons) as Array<[
+                    'breakfast' | 'lunch' | 'dinner', 
+                    { icon: any; label: string; color: string }
+                  ]>).map(([mealType, { icon: Icon, label, color }]) => (
+                    <Tooltip key={mealType} label={`Add to ${label}`}>
+                      <ActionIcon 
+                        onClick={() => handleAddMeal(recipe.id, mealType)}
+                        variant="light"
+                        color={color}
+                        radius="xl"
+                        size="lg"
+                      >
+                        <Icon size={20} />
+                      </ActionIcon>
+                    </Tooltip>
+                  ))}
+                </Group>
               </Group>
-              {recipe.ingredients && (
-                <Text c="dimmed" mt="xs" lineClamp={2}>
-                  {recipe.ingredients.length} ingredients • {recipe.procedure.length} steps
-                </Text>
-              )}
             </Card>
           ))
         )}
