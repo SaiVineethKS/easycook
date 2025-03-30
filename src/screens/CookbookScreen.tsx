@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Title, TextInput, Button, Card, Text, Stack, Group, Grid, Paper, Badge, ActionIcon, Tooltip, Textarea, Loader, Alert, List, Divider, Collapse, Select, FileInput, Anchor, MultiSelect, Popover } from '@mantine/core';
+import { Container, Title, TextInput, Button, Card, Text, Stack, Group, Grid, Paper, Badge, ActionIcon, Tooltip, Textarea, Loader, Alert, List, Divider, Collapse, Select, FileInput, Anchor, MultiSelect, Popover, NumberInput, Modal } from '@mantine/core';
 import { IconTrash, IconEdit, IconPlus, IconVideo, IconBrain, IconAlertCircle, IconCheck, IconX, IconChevronRight, IconChevronDown, IconClock, IconMicrophone, IconMicrophoneOff, IconUpload, IconHeart, IconHeartFilled } from '@tabler/icons-react';
 import { useStore } from '../store/useStore';
 import { parseRecipe, parseRecipeFromAudio } from '../services/GeminiService';
 import { AudioService } from '../services/AudioService';
 
 interface Recipe {
+  id: string;  // Unique identifier for database storage
   title: string;
   ingredients: { name: string; quantity: string }[];
   procedure: string[];
@@ -13,6 +14,15 @@ interface Recipe {
   tags?: string[];
   suggestedTags: string[];
   isFavorite?: boolean;
+  servings: number;
+  numberOfMeals: number;
+  createdAt: Date;
+  aiResponse?: string;
+  metadata: {
+    source: 'youtube' | 'text' | 'audio';
+    originalInput?: string;
+    processingDate: Date;
+  };
 }
 
 export const CookbookScreen = () => {
@@ -20,7 +30,7 @@ export const CookbookScreen = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentRecipe, setCurrentRecipe] = useState<Recipe | null>(null);
-  const { addRecipe, recipes } = useStore();
+  const { addRecipe, recipes, deleteRecipe } = useStore();
   const [expandedRecipes, setExpandedRecipes] = useState<string[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const audioServiceRef = useRef(new AudioService());
@@ -46,6 +56,10 @@ export const CookbookScreen = () => {
     'healthy',
     'comfort food'
   ]);
+  const [servings, setServings] = useState(4); // Default 4 people
+  const [numberOfMeals, setNumberOfMeals] = useState(1); // Default 1 meal
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [deleteConfirmIndex, setDeleteConfirmIndex] = useState<number | null>(null);
 
   const handleAddRecipe = async () => {
     try {
@@ -53,9 +67,29 @@ export const CookbookScreen = () => {
       setError(null);
 
       const parsedRecipe = await parseRecipe(recipeInput);
-      setCurrentRecipe(parsedRecipe);
-      // Auto-select suggested tags
-      setSelectedTags(parsedRecipe.suggestedTags);
+      const isYouTubeUrl = recipeInput.includes('youtube.com') || recipeInput.includes('youtu.be');
+      
+      const newRecipe: Recipe = {
+        id: crypto.randomUUID(),
+        title: parsedRecipe.title,
+        ingredients: parsedRecipe.ingredients,
+        procedure: parsedRecipe.procedure,
+        url: isYouTubeUrl ? recipeInput : undefined,
+        tags: selectedTags,
+        suggestedTags: parsedRecipe.suggestedTags,
+        isFavorite: false,
+        servings,
+        numberOfMeals,
+        createdAt: new Date(),
+        aiResponse: parsedRecipe.aiResponse,
+        metadata: {
+          source: isYouTubeUrl ? 'youtube' : 'text',
+          originalInput: recipeInput,
+          processingDate: new Date()
+        }
+      };
+      
+      setCurrentRecipe(newRecipe);
     } catch (error) {
       setError(error instanceof Error ? error.message : 'An error occurred');
     } finally {
@@ -82,9 +116,24 @@ export const CookbookScreen = () => {
       const audioFile = await audioServiceRef.current.stopRecording();
       setIsRecording(false);
       
-      // Process the audio file
-      const recipe = await parseRecipeFromAudio(audioFile);
-      setCurrentRecipe(recipe);
+      const parsedRecipe = await parseRecipeFromAudio(audioFile);
+      const newRecipe: Recipe = {
+        id: crypto.randomUUID(),
+        title: parsedRecipe.title,
+        ingredients: parsedRecipe.ingredients,
+        procedure: parsedRecipe.procedure,
+        suggestedTags: [],
+        servings: 4, // Default value
+        numberOfMeals: 1, // Default value
+        createdAt: new Date(),
+        aiResponse: parsedRecipe.aiResponse,
+        metadata: {
+          source: 'audio',
+          processingDate: new Date()
+        }
+      };
+      
+      setCurrentRecipe(newRecipe);
     } catch (error) {
       console.error('Error stopping recording:', error);
       setError(error instanceof Error ? error.message : 'Failed to process recording');
@@ -102,8 +151,24 @@ export const CookbookScreen = () => {
       setError(null);
       setAudioFile(file);
       
-      const recipe = await parseRecipeFromAudio(file);
-      setCurrentRecipe(recipe);
+      const parsedRecipe = await parseRecipeFromAudio(file);
+      const newRecipe: Recipe = {
+        id: crypto.randomUUID(),
+        title: parsedRecipe.title,
+        ingredients: parsedRecipe.ingredients,
+        procedure: parsedRecipe.procedure,
+        suggestedTags: [],
+        servings: 4, // Default value
+        numberOfMeals: 1, // Default value
+        createdAt: new Date(),
+        aiResponse: parsedRecipe.aiResponse,
+        metadata: {
+          source: 'audio',
+          processingDate: new Date()
+        }
+      };
+      
+      setCurrentRecipe(newRecipe);
     } catch (error) {
       console.error('Error processing audio:', error);
       setError(error instanceof Error ? error.message : 'Failed to process audio file');
@@ -118,11 +183,15 @@ export const CookbookScreen = () => {
       addRecipe({
         ...currentRecipe,
         url: isYouTubeUrl ? recipeInput : undefined,
-        tags: selectedTags
+        tags: selectedTags,
+        servings,
+        numberOfMeals
       });
       setCurrentRecipe(null);
       setRecipeInput('');
       setSelectedTags([]);
+      setServings(4); // Reset to default
+      setNumberOfMeals(1); // Reset to default
     }
   };
 
@@ -171,44 +240,62 @@ export const CookbookScreen = () => {
     useStore.setState({ recipes: updatedRecipes });
   };
 
+  const updateServings = (index: number, value: number) => {
+    const updatedRecipes = recipes.map((recipe, i) => {
+      if (i === index) {
+        return { ...recipe, servings: value };
+      }
+      return recipe;
+    });
+    useStore.setState({ recipes: updatedRecipes });
+  };
+
+  const updateNumberOfMeals = (index: number, value: number) => {
+    const updatedRecipes = recipes.map((recipe, i) => {
+      if (i === index) {
+        return { ...recipe, numberOfMeals: value };
+      }
+      return recipe;
+    });
+    useStore.setState({ recipes: updatedRecipes });
+  };
+
+  const handleDelete = (index: number) => {
+    setDeleteConfirmIndex(null);
+    deleteRecipe(index);
+  };
+
   const RecipeDetails = ({ recipe }: { recipe: Recipe }) => (
-    <Paper withBorder p="md">
-      <Stack>
-        <Group mb="xs">
-          <IconBrain size={20} />
-          <Title order={4}>{recipe.title}</Title>
-        </Group>
+    <Stack gap="md">
+      <div>
+        <Text fw={500} mb="xs">Ingredients:</Text>
+        <List>
+          {recipe.ingredients.map((ingredient, index) => (
+            <List.Item key={index}>
+              {ingredient.quantity} {ingredient.name}
+            </List.Item>
+          ))}
+        </List>
+      </div>
 
-        <Divider />
+      <div>
+        <Text fw={500} mb="xs">Procedure:</Text>
+        <List>
+          {recipe.procedure.map((step, index) => (
+            <List.Item key={index}>{step}</List.Item>
+          ))}
+        </List>
+      </div>
 
-        <Stack>
-          <Title order={5}>Ingredients:</Title>
-          <Grid>
-            {recipe.ingredients.map((ing: any, index: number) => (
-              <Grid.Col key={index} span={{ base: 12, sm: 6 }}>
-                <Group>
-                  <Text size="sm" fw={500}>{ing.name}:</Text>
-                  <Text size="sm" c="dimmed">{ing.quantity}</Text>
-                </Group>
-              </Grid.Col>
-            ))}
-          </Grid>
-        </Stack>
-
-        <Divider />
-
-        <Stack>
-          <Title order={5}>Procedure:</Title>
-          <List type="ordered" spacing="xs">
-            {recipe.procedure.map((step: string, index: number) => (
-              <List.Item key={index}>
-                <Text size="sm">{step.replace(`Step ${index + 1}: `, '')}</Text>
-              </List.Item>
-            ))}
-          </List>
-        </Stack>
-      </Stack>
-    </Paper>
+      <div>
+        <Text fw={500} mb="xs">Metadata:</Text>
+        <Text size="sm" c="dimmed">
+          Source: {recipe.metadata.source}
+          {recipe.metadata.originalInput && ` | Original Input: ${recipe.metadata.originalInput}`}
+          {` | Created: ${new Date(recipe.createdAt).toLocaleDateString()}`}
+        </Text>
+      </div>
+    </Stack>
   );
 
   // Clean up on unmount
@@ -363,30 +450,88 @@ export const CookbookScreen = () => {
                   </Popover.Dropdown>
                 </Popover>
               </Group>
+
+              <Group grow>
+                <NumberInput
+                  label="Number of People"
+                  description="How many people can this serve?"
+                  value={servings}
+                  onChange={(value) => setServings(Number(value))}
+                  min={1}
+                  max={20}
+                  placeholder="Enter number of servings"
+                />
+                <NumberInput
+                  label="Number of Meals"
+                  description="How many meals can be made?"
+                  value={numberOfMeals}
+                  onChange={(value) => setNumberOfMeals(Number(value))}
+                  min={1}
+                  max={10}
+                  placeholder="Enter number of meals"
+                />
+              </Group>
             </Stack>
           )}
 
           {currentRecipe ? (
             <Stack>
-              <Group justify="space-between" mb="xs">
-                <Group>
-                  <IconBrain size={20} />
-                  <Text fw={500}>AI Generated Recipe</Text>
+              <Card withBorder p="md" radius="md">
+                <Group justify="space-between" mb="md">
+                  <Group>
+                    <IconBrain size={24} color="var(--mantine-color-blue-6)" />
+                    <Text fw={600} size="lg">AI Generated Recipe</Text>
+                  </Group>
+                  <Group>
+                    <Tooltip label="Accept Recipe">
+                      <ActionIcon 
+                        variant="light" 
+                        color="green" 
+                        size="lg"
+                        onClick={handleAcceptRecipe}
+                      >
+                        <IconCheck size={20} />
+                      </ActionIcon>
+                    </Tooltip>
+                    <Tooltip label="Reject Recipe">
+                      <ActionIcon 
+                        variant="light" 
+                        color="red" 
+                        size="lg"
+                        onClick={handleRejectRecipe}
+                      >
+                        <IconX size={20} />
+                      </ActionIcon>
+                    </Tooltip>
+                  </Group>
                 </Group>
-                <Group>
-                  <Tooltip label="Accept Recipe">
-                    <ActionIcon variant="light" color="easyCookSage" onClick={handleAcceptRecipe}>
-                      <IconCheck size={18} />
-                    </ActionIcon>
-                  </Tooltip>
-                  <Tooltip label="Reject Recipe">
-                    <ActionIcon variant="light" color="red" onClick={handleRejectRecipe}>
-                      <IconX size={18} />
-                    </ActionIcon>
-                  </Tooltip>
-                </Group>
-              </Group>
-              <RecipeDetails recipe={currentRecipe} />
+
+                <Stack gap="lg">
+                  <div>
+                    <Text fw={500} size="sm" c="dimmed" mb="xs">Ingredients:</Text>
+                    <List spacing="xs">
+                      {currentRecipe.ingredients.map((ingredient, index) => (
+                        <List.Item key={index}>
+                          <Text size="sm">
+                            <Text span fw={500}>{ingredient.name}:</Text> {ingredient.quantity}
+                          </Text>
+                        </List.Item>
+                      ))}
+                    </List>
+                  </div>
+
+                  <div>
+                    <Text fw={500} size="sm" c="dimmed" mb="xs">Procedure:</Text>
+                    <List type="ordered" spacing="xs">
+                      {currentRecipe.procedure.map((step, index) => (
+                        <List.Item key={index}>
+                          <Text size="sm">{step.replace(`Step ${index + 1}: `, '')}</Text>
+                        </List.Item>
+                      ))}
+                    </List>
+                  </div>
+                </Stack>
+              </Card>
             </Stack>
           ) : (
             <Button 
@@ -462,42 +607,10 @@ export const CookbookScreen = () => {
                       {new Date(recipe.createdAt).toLocaleDateString()}
                     </Badge>
                   </Group>
-                  <Tooltip label={expandedRecipes.includes(index.toString()) ? "Collapse" : "Expand"}>
-                    <ActionIcon 
-                      variant="light" 
-                      onClick={() => toggleRecipeExpansion(index.toString())}
-                    >
-                      {expandedRecipes.includes(index.toString()) ? 
-                        <IconChevronDown size={18} /> : 
-                        <IconChevronRight size={18} />
-                      }
-                    </ActionIcon>
-                  </Tooltip>
                 </Group>
 
                 <Collapse in={expandedRecipes.includes(index.toString())}>
-                  <Divider my="xs" />
-                  <Stack>
-                    <Title order={5}>Ingredients:</Title>
-                    <List>
-                      {recipe.ingredients.map((ing: any, index: number) => (
-                        <List.Item key={index}>
-                          <Text size="sm">
-                            <Text span fw={500}>{ing.name}:</Text> {ing.quantity}
-                          </Text>
-                        </List.Item>
-                      ))}
-                    </List>
-
-                    <Title order={5} mt="sm">Procedure:</Title>
-                    <List type="ordered">
-                      {recipe.procedure.map((step: string, index: number) => (
-                        <List.Item key={index}>
-                          <Text size="sm">{step.replace(`Step ${index + 1}: `, '')}</Text>
-                        </List.Item>
-                      ))}
-                    </List>
-                  </Stack>
+                  <RecipeDetails recipe={recipe} />
                 </Collapse>
 
                 <Button 
@@ -511,6 +624,61 @@ export const CookbookScreen = () => {
                 >
                   {expandedRecipes.includes(index.toString()) ? 'Show Less' : 'Show More'}
                 </Button>
+
+                <Group mb="xs" align="center">
+                  <Text size="sm" c="dimmed">
+                    Serves: <Text span fw={500}>{recipe.servings} people</Text>
+                  </Text>
+                  <Divider orientation="vertical" />
+                  <Text size="sm" c="dimmed">
+                    For: <Text span fw={500}>{recipe.numberOfMeals} meals</Text>
+                  </Text>
+                </Group>
+
+                {recipe.url && (
+                  <Text size="sm" c="dimmed" mb="xs">
+                    <Anchor href={recipe.url} target="_blank" rel="noopener noreferrer">
+                      View Original Video
+                    </Anchor>
+                  </Text>
+                )}
+
+                {/* Tags */}
+                {recipe.tags && recipe.tags.length > 0 && (
+                  <Group gap="xs" mb="xs">
+                    {recipe.tags.map((tag, tagIndex) => (
+                      <Badge key={tagIndex} variant="light">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </Group>
+                )}
+
+                {/* Delete Confirmation Modal */}
+                <Modal
+                  opened={deleteConfirmIndex === index}
+                  onClose={() => setDeleteConfirmIndex(null)}
+                  title="Confirm Delete"
+                  size="sm"
+                >
+                  <Stack>
+                    <Text>Are you sure you want to delete "{recipe.title}"?</Text>
+                    <Group justify="flex-end">
+                      <Button 
+                        variant="light" 
+                        onClick={() => setDeleteConfirmIndex(null)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        color="red" 
+                        onClick={() => handleDelete(index)}
+                      >
+                        Delete
+                      </Button>
+                    </Group>
+                  </Stack>
+                </Modal>
               </Stack>
             </Paper>
           </Grid.Col>

@@ -16,6 +16,7 @@ interface AppState {
   addMealPlan: (mealPlan: MealPlan) => void;
   getRecipeById: (id: string) => Recipe | undefined;
   getMealPlanByDate: (date: string) => MealPlan | undefined;
+  deleteRecipe: (index: number) => void;
 }
 
 export const useStore = create<AppState>((set, get) => ({
@@ -40,5 +41,11 @@ export const useStore = create<AppState>((set, get) => ({
   
   getMealPlanByDate: (date) => {
     return get().mealPlans.find(plan => plan.date === date);
+  },
+  
+  deleteRecipe: (index) => {
+    set((state) => ({
+      recipes: state.recipes.filter((_, i) => i !== index)
+    }));
   }
 }));
