@@ -346,8 +346,13 @@ export const GroceryListScreen = () => {
         // Extract just the ingredient names for categorization
         const ingredientNames = tempGroceryItems.map(item => item.ingredient);
         
-        // Get categories from Gemini
+        // Get categories from Gemini - adding explicit logging
+        console.log('Requesting categories for', ingredientNames.length, 'ingredients');
         const categorizedIngredients = await categorizeGroceryItems(ingredientNames, usedRecipes);
+        console.log('Received categorization response with', categorizedIngredients.length, 'items');
+        
+        // Explicitly stop categorizing - place this early to ensure UI updates
+        setCategorizing(false);
         
         // Create a map for quick lookup of categories
         const categoryMap = new Map();
@@ -372,7 +377,6 @@ export const GroceryListScreen = () => {
           return a.ingredient.localeCompare(b.ingredient);
         });
         
-        setGroceryList(groceryItems);
         // Sort the included meals by date (newest first) and then by meal type (breakfast, lunch, dinner)
         mealsIncluded.sort((a, b) => {
           if (a.date !== b.date) {
@@ -382,19 +386,27 @@ export const GroceryListScreen = () => {
           const typeOrder = { Breakfast: 0, Lunch: 1, Dinner: 2 };
           return typeOrder[a.type as keyof typeof typeOrder] - typeOrder[b.type as keyof typeof typeOrder];
         });
-        setIncludedMeals(mealsIncluded);
         
-        // Show success feedback
-        setFeedback({
-          message: `Generated grocery list with ${groceryItems.length} items for ${mealsIncluded.length} meals`,
-          type: 'success'
-        });
+        // Apply state updates in a single batch with a small timeout to ensure UI updates properly
+        setTimeout(() => {
+          setGroceryList(groceryItems);
+          setIncludedMeals(mealsIncluded);
+          
+          // Show success feedback
+          setFeedback({
+            message: `Generated grocery list with ${groceryItems.length} items for ${mealsIncluded.length} meals`,
+            type: 'success'
+          });
+        }, 50);
+        
       } catch (error) {
         console.error('Error categorizing with Gemini:', error);
         
+        // Explicitly stop categorizing here too
+        setCategorizing(false);
+        
         // Fallback to alphabetical sorting if categorization fails
         tempGroceryItems.sort((a, b) => a.ingredient.localeCompare(b.ingredient));
-        setGroceryList(tempGroceryItems);
         
         // Sort the included meals by date (newest first) and then by meal type
         mealsIncluded.sort((a, b) => {
@@ -405,14 +417,17 @@ export const GroceryListScreen = () => {
           const typeOrder = { Breakfast: 0, Lunch: 1, Dinner: 2 };
           return typeOrder[a.type as keyof typeof typeOrder] - typeOrder[b.type as keyof typeof typeOrder];
         });
-        setIncludedMeals(mealsIncluded);
         
-        setFeedback({
-          message: `Generated grocery list with ${tempGroceryItems.length} items (without categorization)`,
-          type: 'success'
-        });
-      } finally {
-        setCategorizing(false);
+        // Apply state updates in a single batch with a small timeout
+        setTimeout(() => {
+          setGroceryList(tempGroceryItems);
+          setIncludedMeals(mealsIncluded);
+          
+          setFeedback({
+            message: `Generated grocery list with ${tempGroceryItems.length} items (without categorization)`,
+            type: 'success'
+          });
+        }, 50);
       }
       
       setTimeout(() => {
@@ -488,7 +503,7 @@ export const GroceryListScreen = () => {
     }
   }, [savedState.scrollPosition]);
   
-  // Save scroll position before unmounting
+  // Save scroll position and reset states before unmounting
   useEffect(() => {
     return () => {
       // Clear any pending throttle timer
@@ -496,13 +511,20 @@ export const GroceryListScreen = () => {
         clearTimeout(scrollThrottleTimerRef.current);
       }
       
+      // Reset categorizing state if component unmounts while processing
+      if (categorizing) {
+        console.log('Component unmounting with active categorizing - resetting state');
+        setCategorizing(false);
+      }
+      
       if (containerRef.current) {
         saveScreenState('groceryList', {
-          scrollPosition: containerRef.current.scrollTop
+          scrollPosition: containerRef.current.scrollTop,
+          categorizing: false // Always ensure categorizing is false in saved state
         });
       }
     };
-  }, [saveScreenState]);
+  }, [saveScreenState, categorizing]);
   
   // Scroll event handler with throttling to prevent glitching
   const handleScroll = () => {
@@ -760,6 +782,20 @@ export const GroceryListScreen = () => {
                 <Text size="sm" mt="md" c="dimmed">
                   When you return to this screen, your grocery list will be automatically displayed.
                 </Text>
+                
+                {/* Debug button to force-clear spinner in case it gets stuck */}
+                <Button 
+                  size="xs" 
+                  variant="subtle" 
+                  color="gray" 
+                  mt="xl" 
+                  onClick={() => {
+                    console.log('Manually clearing categorizing state');
+                    setCategorizing(false);
+                  }}
+                >
+                  Taking too long? Click here
+                </Button>
               </Stack>
             </Box>
           ) : groceryList.length > 0 ? (
