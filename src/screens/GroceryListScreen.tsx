@@ -26,9 +26,6 @@ import {
   IconPrinter,
   IconInfoCircle,
   IconX,
-  IconChevronRight,
-  IconChevronLeft,
-  IconChefHat,
   IconListDetails
 } from '@tabler/icons-react';
 import { categorizeGroceryItems } from '../services/AIService';
@@ -43,10 +40,6 @@ export const GroceryListScreen = () => {
     message: '',
     type: null
   });
-  
-  // Today's meals carousel state
-  const [selectedMeal, setSelectedMeal] = useState<{recipeId: string, recipeName: string} | null>(null);
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
   
   const { user } = useAuth();
   const { recipes, getMealPlanByDate, saveScreenState, getScreenState } = useStore();
@@ -87,19 +80,6 @@ export const GroceryListScreen = () => {
     // Restore categorizing state
     if (savedState.categorizing !== undefined) {
       setCategorizing(savedState.categorizing);
-    }
-    
-    // Restore selected meal
-    if (savedState.selectedMealId && savedState.selectedMealName) {
-      setSelectedMeal({
-        recipeId: savedState.selectedMealId,
-        recipeName: savedState.selectedMealName
-      });
-      
-      // Restore step index
-      if (savedState.currentStepIndex !== undefined) {
-        setCurrentStepIndex(savedState.currentStepIndex);
-      }
     }
     
     // For backward compatibility - check localStorage
@@ -414,18 +394,6 @@ export const GroceryListScreen = () => {
           setGroceryList(groceryItems);
           setIncludedMeals(mealsIncluded);
           
-          // Auto-select today's meal if available
-          const todaysMeal = mealsIncluded.find(meal => 
-            isToday(meal.dateObj) || meal.date.includes(format(new Date(), 'MMM d'))
-          );
-          
-          if (todaysMeal && todaysMeal.recipeId) {
-            handleSelectMeal(todaysMeal.recipeId, todaysMeal.recipe);
-          } else if (mealsIncluded.length > 0 && mealsIncluded[0].recipeId) {
-            // If no today's meal, select the first meal
-            handleSelectMeal(mealsIncluded[0].recipeId, mealsIncluded[0].recipe);
-          }
-          
           // Show success feedback
           setFeedback({
             message: `Generated grocery list with ${groceryItems.length} items for ${mealsIncluded.length} meals`,
@@ -456,18 +424,6 @@ export const GroceryListScreen = () => {
         setTimeout(() => {
           setGroceryList(tempGroceryItems);
           setIncludedMeals(mealsIncluded);
-          
-          // Auto-select today's meal if available
-          const todaysMeal = mealsIncluded.find(meal => 
-            isToday(meal.dateObj) || meal.date.includes(format(new Date(), 'MMM d'))
-          );
-          
-          if (todaysMeal && todaysMeal.recipeId) {
-            handleSelectMeal(todaysMeal.recipeId, todaysMeal.recipe);
-          } else if (mealsIncluded.length > 0 && mealsIncluded[0].recipeId) {
-            // If no today's meal, select the first meal
-            handleSelectMeal(mealsIncluded[0].recipeId, mealsIncluded[0].recipe);
-          }
           
           setFeedback({
             message: `Generated grocery list with ${tempGroceryItems.length} items (without categorization)`,
@@ -538,14 +494,6 @@ export const GroceryListScreen = () => {
     });
   }, [categorizing, saveScreenState]);
   
-  // Save current step index when it changes
-  useEffect(() => {
-    if (selectedMeal) {
-      saveScreenState('groceryList', {
-        currentStepIndex
-      });
-    }
-  }, [currentStepIndex, selectedMeal, saveScreenState]);
   
   // Restore scroll position on component mount
   useEffect(() => {
@@ -598,76 +546,6 @@ export const GroceryListScreen = () => {
     }, 100);
   };
   
-  // Today's Meals Carousel functions
-  
-  // Handle meal selection for procedure carousel
-  const handleSelectMeal = (recipeId: string, recipeName: string) => {
-    console.log('Meal selected:', { recipeId, recipeName });
-    
-    // Check if the recipe exists in our recipes array
-    const recipeExists = recipes.some(r => r.id === recipeId);
-    console.log('Recipe exists in recipes array:', recipeExists);
-    
-    if (!recipeExists) {
-      console.error('Selected recipe not found in recipes array. This will cause the carousel to not display properly.');
-    }
-    
-    setSelectedMeal({ recipeId, recipeName });
-    setCurrentStepIndex(0); // Reset to first step
-    
-    // Save selection to persistent state
-    saveScreenState('groceryList', {
-      selectedMealId: recipeId,
-      selectedMealName: recipeName
-    });
-    
-    // Debug: Log the current state after setting
-    setTimeout(() => {
-      console.log('Current selectedMeal state:', selectedMeal);
-      console.log('Current step index:', currentStepIndex);
-    }, 50);
-  };
-  
-  // Navigate to next step in the procedure
-  const handleNextStep = () => {
-    const recipe = recipes.find(r => r.id === selectedMeal?.recipeId);
-    if (recipe && recipe.procedure) {
-      if (currentStepIndex < recipe.procedure.length - 1) {
-        setCurrentStepIndex(currentStepIndex + 1);
-      } else {
-        // Wrap around to the beginning
-        setCurrentStepIndex(0);
-      }
-    }
-  };
-  
-  // Navigate to previous step in the procedure
-  const handlePrevStep = () => {
-    const recipe = recipes.find(r => r.id === selectedMeal?.recipeId);
-    if (recipe && recipe.procedure) {
-      if (currentStepIndex > 0) {
-        setCurrentStepIndex(currentStepIndex - 1);
-      } else {
-        // Wrap around to the end
-        setCurrentStepIndex(recipe.procedure.length - 1);
-      }
-    }
-  };
-  
-  // Get the procedure for the selected meal
-  const getSelectedRecipeProcedure = () => {
-    console.log('Looking for recipe with ID:', selectedMeal?.recipeId);
-    console.log('Available recipes:', recipes.map(r => ({ id: r.id, title: r.title })));
-    
-    const recipe = recipes.find(r => r.id === selectedMeal?.recipeId);
-    console.log('Found recipe:', recipe?.title || 'Not found');
-    
-    if (!recipe) {
-      console.error('Recipe not found in recipes array. This will result in empty procedure steps.');
-    }
-    
-    return recipe?.procedure || [];
-  };
 
   return (
     <Container 
@@ -859,59 +737,10 @@ export const GroceryListScreen = () => {
                         shadow="sm" 
                         p="md" 
                         withBorder
-                        onClick={() => {
-                          if (meal.recipeId) {
-                            // Visual feedback even before state updates
-                            const element = document.activeElement as HTMLElement;
-                            if (element) element.blur(); // Remove focus
-                            
-                            // Apply a quick pulse animation to show something happened
-                            const paperElement = document.activeElement as HTMLElement;
-                            if (paperElement) {
-                              paperElement.style.transform = 'scale(1.05)';
-                              setTimeout(() => {
-                                paperElement.style.transform = '';
-                              }, 200);
-                            }
-                            
-                            // Actual state update
-                            handleSelectMeal(meal.recipeId, meal.recipe);
-                            
-                            // Scroll to carousel if it exists
-                            setTimeout(() => {
-                              const carousel = document.getElementById('recipe-carousel');
-                              if (carousel) {
-                                carousel.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                              }
-                            }, 100);
-                          }
-                        }}
                         style={{ 
-                          cursor: 'pointer',
-                          transition: 'transform 0.2s, box-shadow 0.2s',
-                          transform: selectedMeal?.recipeId === meal.recipeId ? 'scale(1.02)' : 'scale(1)',
-                          boxShadow: selectedMeal?.recipeId === meal.recipeId ? '0 0 0 2px #228be6, 0 4px 12px rgba(0,0,0,0.1)' : undefined,
                           position: 'relative'
                         }}
                       >
-                        {selectedMeal?.recipeId === meal.recipeId && (
-                          <div style={{
-                            position: 'absolute',
-                            top: '-8px',
-                            right: '-8px',
-                            background: '#228be6',
-                            color: 'white',
-                            borderRadius: '50%',
-                            width: '24px',
-                            height: '24px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                          }}>
-                            ✓
-                          </div>
-                        )}
                         <Stack gap="md">
                           <Group justify="space-between">
                             <Badge 
@@ -946,87 +775,6 @@ export const GroceryListScreen = () => {
           </Box>
         )}
         
-        {/* Today's Recipe Procedure Carousel */}
-        {console.log('Rendering condition check:', { selectedMeal, includedMealsLength: includedMeals.length })}
-        {selectedMeal && includedMeals.length > 0 && (
-          <Paper id="recipe-carousel" p="md" mt="xl" withBorder>
-            <Stack spacing="xl">
-              <Group position="apart">
-                <Group>
-                  <IconChefHat size={24} color="var(--mantine-color-blue-6)" />
-                  <Title order={3}>Today's Recipe Steps: {selectedMeal.recipeName}</Title>
-                </Group>
-              </Group>
-              
-              <Divider />
-              
-              {/* Carousel controls and content */}
-              <Box style={{ position: 'relative', minHeight: '220px' }}>
-                {/* Procedure step */}
-                <Paper 
-                  p="xl" 
-                  withBorder 
-                  style={{ 
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-                    position: 'relative'
-                  }}
-                >
-                  <Stack align="center">
-                    <Badge size="xl" color="blue" variant="filled" mb="md">
-                      Step {currentStepIndex + 1} of {getSelectedRecipeProcedure().length}
-                    </Badge>
-                    
-                    <Text size="xl" fw={500} ta="center">
-                      {getSelectedRecipeProcedure()[currentStepIndex] || "No steps available"}
-                    </Text>
-                    
-                    {/* Ingredients summary */}
-                    {currentStepIndex === 0 && (
-                      <Paper p="md" withBorder mt="lg" style={{ maxWidth: '600px', width: '100%' }}>
-                        <Stack spacing="xs">
-                          <Group>
-                            <IconListDetails size={18} />
-                            <Text fw={700}>Ingredients:</Text>
-                          </Group>
-                          <Text size="sm">
-                            {recipes.find(r => r.id === selectedMeal.recipeId)?.ingredients
-                              .map(ing => `${ing.quantity} ${ing.name}`)
-                              .join(', ') || "No ingredients available"}
-                          </Text>
-                        </Stack>
-                      </Paper>
-                    )}
-                  </Stack>
-                  
-                  {/* Navigation buttons */}
-                  <Group style={{ position: 'absolute', bottom: '10px', right: '10px' }}>
-                    <ActionIcon 
-                      variant="filled" 
-                      color="blue" 
-                      size="xl" 
-                      radius="xl"
-                      onClick={handlePrevStep}
-                      style={{ boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}
-                    >
-                      <IconChevronLeft size={20} />
-                    </ActionIcon>
-                    <ActionIcon 
-                      variant="filled" 
-                      color="blue" 
-                      size="xl" 
-                      radius="xl"
-                      onClick={handleNextStep}
-                      style={{ boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)' }}
-                    >
-                      <IconChevronRight size={20} />
-                    </ActionIcon>
-                  </Group>
-                </Paper>
-              </Box>
-            </Stack>
-          </Paper>
-        )}
         
         {/* Grocery List Content */}
         <Paper p="md" withBorder>
