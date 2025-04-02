@@ -28,7 +28,7 @@ import {
   IconX,
   IconChevronRight,
   IconChevronLeft,
-  IconCooking,
+  IconChefHat,
   IconListDetails
 } from '@tabler/icons-react';
 import { categorizeGroceryItems } from '../services/AIService';
@@ -901,7 +901,7 @@ export const GroceryListScreen = () => {
             <Stack spacing="xl">
               <Group position="apart">
                 <Group>
-                  <IconCooking size={24} color="var(--mantine-color-blue-6)" />
+                  <IconChefHat size={24} color="var(--mantine-color-blue-6)" />
                   <Title order={3}>Today's Recipe Steps: {selectedMeal.recipeName}</Title>
                 </Group>
               </Group>
