@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Container, 
   Title, 
@@ -27,7 +27,7 @@ import {
   IconInfoCircle,
   IconX
 } from '@tabler/icons-react';
-import { categorizeGroceryItems } from '../services/GeminiService';
+import { categorizeGroceryItems } from '../services/AIService';
 
 export const GroceryListScreen = () => {
   // Grocery list state
@@ -41,7 +41,15 @@ export const GroceryListScreen = () => {
   });
   
   const { user } = useAuth();
-  const { recipes, getMealPlanByDate } = useStore();
+  const { recipes, getMealPlanByDate, saveScreenState, getScreenState } = useStore();
+  
+  // Container ref for scroll position tracking
+  const containerRef = useRef<HTMLDivElement>(null);
+  // Throttle timer for scroll events
+  const scrollThrottleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // Get saved state from store
+  const savedState = getScreenState('groceryList');
   
   // Check for saved date range in localStorage
   useEffect(() => {
@@ -397,8 +405,68 @@ export const GroceryListScreen = () => {
     }
   };
 
+  // Add effects for state persistence
+  useEffect(() => {
+    // Save expanded categories whenever they change
+    saveScreenState('groceryList', {
+      expandedCategories: []  // Not implemented yet, but can be added
+    });
+  }, [saveScreenState]);
+  
+  // Restore scroll position on component mount
+  useEffect(() => {
+    if (containerRef.current && savedState.scrollPosition) {
+      setTimeout(() => {
+        if (containerRef.current) {
+          containerRef.current.scrollTop = savedState.scrollPosition;
+        }
+      }, 100); // Short delay to ensure content is rendered
+    }
+  }, [savedState.scrollPosition]);
+  
+  // Save scroll position before unmounting
+  useEffect(() => {
+    return () => {
+      // Clear any pending throttle timer
+      if (scrollThrottleTimerRef.current) {
+        clearTimeout(scrollThrottleTimerRef.current);
+      }
+      
+      if (containerRef.current) {
+        saveScreenState('groceryList', {
+          scrollPosition: containerRef.current.scrollTop
+        });
+      }
+    };
+  }, [saveScreenState]);
+  
+  // Scroll event handler with throttling to prevent glitching
+  const handleScroll = () => {
+    // Skip if already waiting for a throttle timer
+    if (scrollThrottleTimerRef.current) return;
+    
+    // Set a throttle timer of 100ms
+    scrollThrottleTimerRef.current = setTimeout(() => {
+      if (containerRef.current) {
+        saveScreenState('groceryList', {
+          scrollPosition: containerRef.current.scrollTop
+        });
+      }
+      // Clear the throttle timer
+      scrollThrottleTimerRef.current = null;
+    }, 100);
+  };
+
   return (
-    <Container size="lg">
+    <Container 
+      size="lg" 
+      ref={containerRef}
+      onScroll={handleScroll}
+      style={{ 
+        minHeight: '100vh',  // Use minHeight instead of fixed height
+        position: 'relative', // Keep position context
+        overflowX: 'hidden'  // Only hide horizontal overflow
+      }}>
       <Stack spacing="md">
         {/* Feedback notification */}
         {feedback.type && (
@@ -550,8 +618,9 @@ export const GroceryListScreen = () => {
               onClick={generateGroceryList}
               disabled={!groceryDateRange[0] || !groceryDateRange[1] || categorizing}
               loading={categorizing}
+              leftSection={categorizing ? <Loader size="xs" color="white" /> : null}
             >
-              {categorizing ? 'Processing...' : 'Generate Grocery List'}
+              {categorizing ? 'AI Categorizing Ingredients...' : 'Generate Grocery List'}
             </Button>
           </Group>
         </Paper>
@@ -614,9 +683,20 @@ export const GroceryListScreen = () => {
           {categorizing ? (
             <Box py="xl" ta="center">
               <Loader size="md" color="green" />
-              <Text mt="md">
-                Organizing ingredients by category...
-              </Text>
+              <Stack align="center" mt="md">
+                <Text size="md" fw={500}>
+                  Organizing ingredients by category...
+                </Text>
+                <Badge color="green" variant="light" size="lg" mt="xs">
+                  <Group gap={6}>
+                    <IconInfoCircle size={14} />
+                    <Text size="xs">Feel free to navigate to other screens - processing will continue in the background</Text>
+                  </Group>
+                </Badge>
+                <Text size="sm" mt="md" c="dimmed">
+                  When you return to this screen, your grocery list will be automatically displayed.
+                </Text>
+              </Stack>
             </Box>
           ) : groceryList.length > 0 ? (
             <div id="grocery-list-printable">
@@ -636,7 +716,7 @@ export const GroceryListScreen = () => {
                   
                   return (
                     <Box key={category} mt="md">
-                      <Text fw={700} size="lg" mb="xs" tt="capitalize">
+                      <Text fw={700} size="lg" mb="xs" tt="capitalize" dataOrder="1">
                         {formatCategoryName(category)}
                       </Text>
                       <Table striped highlightOnHover>
