@@ -568,7 +568,24 @@ export const ExecutionScreen = () => {
                   </Group>
                   
                   <Text size="xl" fw={500} ta="center">
-                    {getSelectedRecipeProcedure()[currentStepIndex] || "No steps available"}
+                    {(() => {
+                      const step = getSelectedRecipeProcedure()[currentStepIndex];
+                      if (!step) return "No steps available";
+                      
+                      // Remove "Step X: " prefix if present
+                      const withoutStepPrefix = step.replace(/^Step\s+\d+\s*:\s*/i, '');
+                      
+                      // Remove any YouTube URLs
+                      const withoutUrls = withoutStepPrefix.replace(/https?:\/\/(?:www\.)?(?:youtube\.com|youtu\.be)\/[^\s]+/g, '');
+                      
+                      // Remove any timestamps like 00:24, 1:45, etc.
+                      const withoutTimestamps = withoutUrls.replace(/\d+:\d+(?::\d+)?/g, '');
+                      
+                      // Clean up any trailing punctuation, commas or extra spaces
+                      const cleaned = withoutTimestamps.replace(/[,.]+\s*$/, '').trim().replace(/\s+/g, ' ');
+                      
+                      return cleaned || "No steps available";
+                    })()}
                   </Text>
                 </Stack>
                 
