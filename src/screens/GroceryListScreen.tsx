@@ -353,8 +353,7 @@ export const GroceryListScreen = () => {
         const categorizedIngredients = await categorizeGroceryItems(ingredientNames, usedRecipes);
         console.log('Received categorization response with', categorizedIngredients.length, 'items');
         
-        // Explicitly stop categorizing - place this early to ensure UI updates
-        setCategorizing(false);
+        console.log("Beginning to process categorization response...");
         
         // Create a map for quick lookup of categories
         const categoryMap = new Map();
@@ -368,6 +367,8 @@ export const GroceryListScreen = () => {
           category: categoryMap.get(item.ingredient) || item.category,
           checked: false // Initial state is unchecked
         }));
+        
+        console.log(`Mapped ${groceryItems.length} grocery items with categories`);
         
         // Sort by category then by ingredient name
         groceryItems.sort((a, b) => {
@@ -389,23 +390,26 @@ export const GroceryListScreen = () => {
           return typeOrder[a.type as keyof typeof typeOrder] - typeOrder[b.type as keyof typeof typeOrder];
         });
         
-        // Apply state updates in a single batch with a small timeout to ensure UI updates properly
+        console.log("Updating state with categorized grocery list...");
+        
+        // First update the grocery list
+        setGroceryList(groceryItems);
+        setIncludedMeals(mealsIncluded);
+        
+        // Show success feedback
+        setFeedback({
+          message: `Generated grocery list with ${groceryItems.length} items for ${mealsIncluded.length} meals`,
+          type: 'success'
+        });
+        
+        // Only stop categorizing after updates are applied
         setTimeout(() => {
-          setGroceryList(groceryItems);
-          setIncludedMeals(mealsIncluded);
-          
-          // Show success feedback
-          setFeedback({
-            message: `Generated grocery list with ${groceryItems.length} items for ${mealsIncluded.length} meals`,
-            type: 'success'
-          });
-        }, 50);
+          setCategorizing(false);
+          console.log("Categorizing complete, spinner should disappear");
+        }, 100);
         
       } catch (error) {
         console.error('Error categorizing with Gemini:', error);
-        
-        // Explicitly stop categorizing here too
-        setCategorizing(false);
         
         // Fallback to alphabetical sorting if categorization fails
         tempGroceryItems.sort((a, b) => a.ingredient.localeCompare(b.ingredient));
@@ -420,16 +424,22 @@ export const GroceryListScreen = () => {
           return typeOrder[a.type as keyof typeof typeOrder] - typeOrder[b.type as keyof typeof typeOrder];
         });
         
-        // Apply state updates in a single batch with a small timeout
+        console.log("Applying fallback sorting without categorization");
+        
+        // Apply updates immediately
+        setGroceryList(tempGroceryItems);
+        setIncludedMeals(mealsIncluded);
+        
+        setFeedback({
+          message: `Generated grocery list with ${tempGroceryItems.length} items (without categorization)`,
+          type: 'success'
+        });
+        
+        // Only stop categorizing after updates are applied
         setTimeout(() => {
-          setGroceryList(tempGroceryItems);
-          setIncludedMeals(mealsIncluded);
-          
-          setFeedback({
-            message: `Generated grocery list with ${tempGroceryItems.length} items (without categorization)`,
-            type: 'success'
-          });
-        }, 50);
+          setCategorizing(false);
+          console.log("Error handling complete, spinner should disappear");
+        }, 100);
       }
       
       setTimeout(() => {
@@ -492,6 +502,9 @@ export const GroceryListScreen = () => {
     saveScreenState('groceryList', {
       categorizing
     });
+    
+    // Add debug logging to track categorizing state changes
+    console.log("Categorizing state changed to:", categorizing);
   }, [categorizing, saveScreenState]);
   
   
@@ -778,7 +791,7 @@ export const GroceryListScreen = () => {
         
         {/* Grocery List Content */}
         <Paper p="md" withBorder>
-          {categorizing ? (
+          {categorizing === true ? (
             <Box py="xl" ta="center">
               <Loader size="md" color="green" />
               <Stack align="center" mt="md">
