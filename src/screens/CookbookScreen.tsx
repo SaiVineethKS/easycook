@@ -220,7 +220,8 @@ export const CookbookScreen = () => {
             
             return {
               ...timestamp,
-              url: videoUrl
+              url: videoUrl,
+              date: new Date().toISOString().split('T')[0] // Add today's date in YYYY-MM-DD format
             };
           }) || [];
           
@@ -371,6 +372,13 @@ export const CookbookScreen = () => {
           const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : '';
           const youtubeUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : '';
           
+          // Process any timestamps and add today's date to each for Today's meals section
+          const processedTimestamps = parsedRecipe.timestamps?.map(timestamp => ({
+            ...timestamp,
+            url: videoId ? `https://www.youtube.com/watch?v=${videoId}&t=0s` : '',
+            date: new Date().toISOString().split('T')[0] // Add today's date in YYYY-MM-DD format
+          })) || [];
+          
           const newRecipe: Recipe = {
             id: crypto.randomUUID(),
             title: parsedRecipe.title,
@@ -387,7 +395,8 @@ export const CookbookScreen = () => {
               source: 'audio',
               processingDate: new Date(),
               videoId: videoId || undefined
-            }
+            },
+            timestamps: processedTimestamps
           };
           
           // Store result in global state and mark processing as complete
@@ -458,6 +467,13 @@ export const CookbookScreen = () => {
           const thumbnailUrl = videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : '';
           const youtubeUrl = videoId ? `https://www.youtube.com/watch?v=${videoId}` : '';
           
+          // Process any timestamps and add today's date to each for Today's meals section
+          const processedTimestamps = parsedRecipe.timestamps?.map(timestamp => ({
+            ...timestamp,
+            url: videoId ? `https://www.youtube.com/watch?v=${videoId}&t=0s` : '',
+            date: new Date().toISOString().split('T')[0] // Add today's date in YYYY-MM-DD format
+          })) || [];
+          
           const newRecipe: Recipe = {
             id: crypto.randomUUID(),
             title: parsedRecipe.title,
@@ -474,7 +490,8 @@ export const CookbookScreen = () => {
               source: 'audio',
               processingDate: new Date(),
               videoId: videoId || undefined
-            }
+            },
+            timestamps: processedTimestamps
           };
           
           // Store result in global state and mark processing as complete
