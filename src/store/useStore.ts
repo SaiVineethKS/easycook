@@ -34,8 +34,11 @@ interface GroceryListScreenState {
   scrollPosition: number;
   groceryList: {ingredient: string, quantity: string, recipes: string[], category: string, checked: boolean}[];
   dateRange: {start: string | null, end: string | null};
-  includedMeals: {date: string, dateObj: string, type: string, recipe: string}[];
+  includedMeals: {date: string, dateObj: string, type: string, recipe: string, recipeId?: string}[];
   categorizing: boolean;
+  selectedMealId?: string;
+  selectedMealName?: string;
+  currentStepIndex?: number;
 }
 
 interface ExecutionScreenState {
@@ -105,7 +108,10 @@ export const useStore = create<AppState>((set, get) => ({
       groceryList: [],
       dateRange: { start: null, end: null },
       includedMeals: [],
-      categorizing: false
+      categorizing: false,
+      selectedMealId: undefined,
+      selectedMealName: undefined,
+      currentStepIndex: 0
     },
     execution: {
       currentStep: 0,
