@@ -602,6 +602,16 @@ export const GroceryListScreen = () => {
   
   // Handle meal selection for procedure carousel
   const handleSelectMeal = (recipeId: string, recipeName: string) => {
+    console.log('Meal selected:', { recipeId, recipeName });
+    
+    // Check if the recipe exists in our recipes array
+    const recipeExists = recipes.some(r => r.id === recipeId);
+    console.log('Recipe exists in recipes array:', recipeExists);
+    
+    if (!recipeExists) {
+      console.error('Selected recipe not found in recipes array. This will cause the carousel to not display properly.');
+    }
+    
     setSelectedMeal({ recipeId, recipeName });
     setCurrentStepIndex(0); // Reset to first step
     
@@ -610,6 +620,12 @@ export const GroceryListScreen = () => {
       selectedMealId: recipeId,
       selectedMealName: recipeName
     });
+    
+    // Debug: Log the current state after setting
+    setTimeout(() => {
+      console.log('Current selectedMeal state:', selectedMeal);
+      console.log('Current step index:', currentStepIndex);
+    }, 50);
   };
   
   // Navigate to next step in the procedure
@@ -640,7 +656,16 @@ export const GroceryListScreen = () => {
   
   // Get the procedure for the selected meal
   const getSelectedRecipeProcedure = () => {
+    console.log('Looking for recipe with ID:', selectedMeal?.recipeId);
+    console.log('Available recipes:', recipes.map(r => ({ id: r.id, title: r.title })));
+    
     const recipe = recipes.find(r => r.id === selectedMeal?.recipeId);
+    console.log('Found recipe:', recipe?.title || 'Not found');
+    
+    if (!recipe) {
+      console.error('Recipe not found in recipes array. This will result in empty procedure steps.');
+    }
+    
     return recipe?.procedure || [];
   };
 
@@ -834,7 +859,33 @@ export const GroceryListScreen = () => {
                         shadow="sm" 
                         p="md" 
                         withBorder
-                        onClick={() => meal.recipeId && handleSelectMeal(meal.recipeId, meal.recipe)}
+                        onClick={() => {
+                          if (meal.recipeId) {
+                            // Visual feedback even before state updates
+                            const element = document.activeElement as HTMLElement;
+                            if (element) element.blur(); // Remove focus
+                            
+                            // Apply a quick pulse animation to show something happened
+                            const paperElement = document.activeElement as HTMLElement;
+                            if (paperElement) {
+                              paperElement.style.transform = 'scale(1.05)';
+                              setTimeout(() => {
+                                paperElement.style.transform = '';
+                              }, 200);
+                            }
+                            
+                            // Actual state update
+                            handleSelectMeal(meal.recipeId, meal.recipe);
+                            
+                            // Scroll to carousel if it exists
+                            setTimeout(() => {
+                              const carousel = document.getElementById('recipe-carousel');
+                              if (carousel) {
+                                carousel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                              }
+                            }, 100);
+                          }
+                        }}
                         style={{ 
                           cursor: 'pointer',
                           transition: 'transform 0.2s, box-shadow 0.2s',
@@ -896,8 +947,9 @@ export const GroceryListScreen = () => {
         )}
         
         {/* Today's Recipe Procedure Carousel */}
+        {console.log('Rendering condition check:', { selectedMeal, includedMealsLength: includedMeals.length })}
         {selectedMeal && includedMeals.length > 0 && (
-          <Paper p="md" mt="xl" withBorder>
+          <Paper id="recipe-carousel" p="md" mt="xl" withBorder>
             <Stack spacing="xl">
               <Group position="apart">
                 <Group>
