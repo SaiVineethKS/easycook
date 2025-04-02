@@ -51,10 +51,39 @@ export const GroceryListScreen = () => {
   // Get saved state from store
   const savedState = getScreenState('groceryList');
   
-  // Check for saved date range in localStorage
+  // Initialize state from saved values
   useEffect(() => {
+    // Restore date range if available
+    if (savedState.dateRange && savedState.dateRange.start && savedState.dateRange.end) {
+      setGroceryDateRange([
+        new Date(savedState.dateRange.start), 
+        new Date(savedState.dateRange.end)
+      ]);
+    }
+    
+    // Restore grocery list if available
+    if (savedState.groceryList && savedState.groceryList.length > 0) {
+      setGroceryList(savedState.groceryList);
+    }
+    
+    // Restore included meals if available
+    if (savedState.includedMeals && savedState.includedMeals.length > 0) {
+      // Convert dateObj from string back to Date
+      const restoredMeals = savedState.includedMeals.map(meal => ({
+        ...meal,
+        dateObj: new Date(meal.dateObj)
+      }));
+      setIncludedMeals(restoredMeals);
+    }
+    
+    // Restore categorizing state
+    if (savedState.categorizing !== undefined) {
+      setCategorizing(savedState.categorizing);
+    }
+    
+    // For backward compatibility - check localStorage
     const savedDateRange = localStorage.getItem('groceryDateRange');
-    if (savedDateRange) {
+    if (savedDateRange && !savedState.dateRange.start) {
       try {
         const { start, end } = JSON.parse(savedDateRange);
         setGroceryDateRange([new Date(start), new Date(end)]);
@@ -405,13 +434,48 @@ export const GroceryListScreen = () => {
     }
   };
 
-  // Add effects for state persistence
+  // Save grocery list state whenever it changes
   useEffect(() => {
-    // Save expanded categories whenever they change
+    if (groceryList.length > 0) {
+      saveScreenState('groceryList', {
+        groceryList
+      });
+    }
+  }, [groceryList, saveScreenState]);
+  
+  // Save date range whenever it changes
+  useEffect(() => {
+    if (groceryDateRange[0] && groceryDateRange[1]) {
+      saveScreenState('groceryList', {
+        dateRange: {
+          start: groceryDateRange[0].toISOString(),
+          end: groceryDateRange[1].toISOString()
+        }
+      });
+    }
+  }, [groceryDateRange, saveScreenState]);
+  
+  // Save included meals whenever they change
+  useEffect(() => {
+    if (includedMeals.length > 0) {
+      // Need to convert Date objects to strings for storage
+      const serializedMeals = includedMeals.map(meal => ({
+        ...meal,
+        dateObj: meal.dateObj.toISOString() // Convert Date to string
+      }));
+      
+      saveScreenState('groceryList', {
+        includedMeals: serializedMeals
+      });
+    }
+  }, [includedMeals, saveScreenState]);
+  
+  // Save categorizing state
+  useEffect(() => {
     saveScreenState('groceryList', {
-      expandedCategories: []  // Not implemented yet, but can be added
+      categorizing
     });
-  }, [saveScreenState]);
+  }, [categorizing, saveScreenState]);
   
   // Restore scroll position on component mount
   useEffect(() => {
