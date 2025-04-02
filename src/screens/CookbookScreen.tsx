@@ -693,14 +693,6 @@ export const CookbookScreen = () => {
     };
   }, [isRecording, saveScreenState]);
 
-  // Add debug log to see component state each render
-  console.log('CookbookScreen render state:', { 
-    analysisResult: analysisResult?.title || 'null', 
-    currentRecipe: currentRecipe?.title || 'null',
-    recipeProcessing,
-    loading,
-    error
-  });
 
   return (
     <Container 
@@ -792,7 +784,6 @@ export const CookbookScreen = () => {
 
           {currentRecipe && (
             <Paper shadow="sm" p="lg" radius="md" withBorder>
-              {console.log('Rendering recipe UI with:', currentRecipe.title, currentRecipe)}
               <Stack gap="lg">
                 <Group>
                   <IconBrain size={24} color="var(--mantine-color-blue-6)" />
@@ -991,13 +982,6 @@ export const CookbookScreen = () => {
             </Paper>
           )}
 
-          {/* Debug element to help diagnose UI issues */}
-          <div style={{ display: 'none' }}>
-            State values: analysisResult={String(Boolean(analysisResult))}, 
-            currentRecipe={String(Boolean(currentRecipe))}, 
-            recipeProcessing={String(recipeProcessing)}, 
-            loading={String(loading)}
-          </div>
 
           {/* Only show the Add Recipe button when not in any processing state and no recipe is currently displayed */}
           {!currentRecipe && !recipeProcessing && !loading && (

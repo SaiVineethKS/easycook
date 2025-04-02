@@ -222,8 +222,6 @@ export const useStore = create<AppState>((set, get) => ({
     const startTime = get().backgroundProcessingStartTime;
     const processingTime = startTime ? ((Date.now() - startTime) / 1000).toFixed(2) : 'unknown';
     
-    console.log('Setting recipe processing complete with result:', result?.title || 'null');
-    
     set({ 
       recipeProcessing: false,
       analysisResult: result,
@@ -231,13 +229,7 @@ export const useStore = create<AppState>((set, get) => ({
       backgroundProcessingStartTime: null
     });
     
-    // Verify the state was updated correctly
-    const newState = get();
-    console.log(`Completed background processing in ${processingTime} seconds.`, {
-      recipeProcessing: newState.recipeProcessing,
-      analysisResult: newState.analysisResult?.title || 'null',
-      error: newState.error
-    });
+    console.log(`Completed background processing in ${processingTime} seconds.`);
   },
   
   toggleFavorite: async (id) => {
