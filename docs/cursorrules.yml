@@ -1,0 +1,128 @@
+# EasyCook Project Cursor Rules
+#
+# This file defines coding standards and best practices for the EasyCook project.
+# It is used by the Cursor editor for automatic code analysis and suggestions.
+
+version: 1.0
+
+# General code style
+style:
+  indentation: 2  # Use 2 spaces for indentation
+  semicolons: true  # Require semicolons at the end of statements
+  quotes: single  # Prefer single quotes for strings
+  bracket_spacing: true  # Space inside object literals
+  jsx_bracket_spacing: true  # Space inside JSX curly braces
+  trailing_comma: es5  # Use trailing commas where valid in ES5
+  max_line_length: 100  # Maximum line length
+  object_curly_spacing: true  # Space inside object literals
+
+# TypeScript settings
+typescript:
+  strict: true  # Enable strict type checking
+  no_any: warn  # Warn when using the 'any' type
+  explicit_function_return_type: warn  # Encourage explicit return types
+  interface_over_type: prefer  # Prefer interfaces over type aliases
+  exhaustive_switch: error  # Require exhaustive switch statements
+  no_non_null_assertion: warn  # Warn about non-null assertions
+
+# React rules
+react:
+  function_component: true  # Use functional components
+  hooks_order:  # Recommended hooks order
+    - useState
+    - useReducer
+    - useContext
+    - custom_state_hooks
+    - useRef
+    - useCallback
+    - useMemo
+    - useEffect
+    - useLayoutEffect
+    - other_hooks
+  jsx_boolean_value: never  # Omit values for boolean attributes in JSX
+  jsx_self_closing: always  # Use self-closing tags when no children
+  no_array_index_key: warn  # Warn about using array indices as keys
+
+# Import organization
+imports:
+  groups:  # Import grouping order
+    - react  # React and related libraries
+    - external  # External dependencies
+    - internal  # Application imports
+    - type  # Type imports
+    - asset  # CSS, images, etc.
+  sort: alphabetical  # Sort imports alphabetically within groups
+  newline_between_groups: true  # Add newline between import groups
+
+# File organization
+files:
+  component_per_file: true  # One component per file
+  index_exports: true  # Use index files for clean exports
+  consistent_naming:  # File naming conventions
+    components: PascalCase  # Component files use PascalCase
+    hooks: camelCase  # Hook files use camelCase
+    utils: camelCase  # Utility files use camelCase
+    types: PascalCase  # Type definition files use PascalCase
+    contexts: PascalCase  # Context files use PascalCase
+    services: PascalCase  # Service files use PascalCase
+
+# Commenting and documentation
+documentation:
+  jsdoc_complex_functions: true  # Use JSDoc for complex functions
+  explain_non_obvious: true  # Comment non-obvious code
+  todos: allowed  # Allow TODO comments
+  component_props: jsdoc  # Document component props with JSDoc
+
+# Performance considerations
+performance:
+  use_memo_for_expensive: true  # Use useMemo for expensive calculations
+  use_callback_for_handlers: true  # Use useCallback for event handlers
+  dependencies_array: complete  # Require complete dependencies arrays
+  avoid_nested_subscriptions: true  # Avoid nested subscription patterns
+
+# Accessibility
+accessibility:
+  semantic_html: true  # Use semantic HTML elements
+  aria_props: required  # Require appropriate ARIA attributes
+  alt_text: required  # Require alt text for images
+  keyboard_navigation: true  # Support keyboard navigation
+  color_contrast: check  # Check for sufficient color contrast
+
+# Project-specific patterns
+patterns:
+  state_management:
+    global: zustand  # Use Zustand for global state
+    local: hooks  # Use hooks for local state
+  
+  api_calls:
+    pattern: service  # Use service layer for API calls
+    error_handling: required  # Require error handling
+  
+  component_structure:
+    props_first: true  # Define props at the beginning
+    hooks_top: true  # Define hooks at the top level
+    extract_complex_logic: true  # Extract complex logic to helpers
+  
+  firebase:
+    error_handling: required  # Require error handling for Firebase operations
+    security_rules: validate  # Validate Firebase security rules
+
+# Custom rules for EasyCook
+custom_rules:
+  - name: mantine_import_structure
+    description: "Import Mantine components individually for better tree-shaking"
+    pattern: "import { ([^}]*) } from '@mantine/core'"
+    good_example: "import { Button, Text, Card } from '@mantine/core';"
+    bad_example: "import * as Mantine from '@mantine/core';"
+  
+  - name: recipe_type_usage
+    description: "Use the Recipe type for recipe data"
+    pattern: "(recipe|recipes)\\s*:\\s*any"
+    good_example: "const recipe: Recipe = { ... };"
+    bad_example: "const recipe: any = { ... };"
+  
+  - name: firebase_error_handling
+    description: "Handle Firebase errors properly"
+    pattern: "try\\s*{[^}]*firebase[^}]*}\\s*catch\\s*\\(error\\)\\s*{"
+    good_example: "try { await addDoc(collection(db, 'recipes'), recipe); } catch (error) { console.error('Firebase error:', error); }"
+    bad_example: "await addDoc(collection(db, 'recipes'), recipe);"
