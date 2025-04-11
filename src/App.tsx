@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Link, Navigate, Outlet, useLocation } from 'react-router-dom';
 import { 
   MantineProvider, 
   AppShell, 
@@ -20,7 +20,10 @@ import {
   IconUser, 
   IconChevronDown,
   IconSettings,
-  IconShoppingCart
+  IconShoppingCart,
+  IconBook,
+  IconCalendar,
+  IconToolsKitchen2
 } from '@tabler/icons-react';
 import { AuthProvider } from './contexts/AuthContext';
 import { LoginScreen } from './screens/LoginScreen';
@@ -49,6 +52,9 @@ const UserMenu = () => {
             transition: 'all 0.2s ease',
             borderRadius: '8px',
             padding: '6px 10px',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center'
           }}
           sx={(theme) => ({
             '&:hover': {
@@ -80,8 +86,8 @@ const UserMenu = () => {
         style={{
           borderRadius: '12px',
           overflow: 'hidden',
-          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.1)',
-          border: '1px solid rgba(0, 103, 119, 0.1)',
+          boxShadow: '0 10px 30px rgba(171, 83, 0, 0.15)',
+          border: '1px solid rgba(171, 83, 0, 0.1)',
         }}
       >
         <Menu.Label style={{ backgroundColor: 'rgba(171, 83, 0, 0.05)', fontWeight: 600 }}>
@@ -131,11 +137,13 @@ const LoadingScreen = () => (
         fw={700}
         style={{
           fontFamily: '"Playfair Display", serif',
-          color: '#ab5300',
-          textShadow: '0 1px 2px rgba(171, 83, 0, 0.15)'
+          background: 'linear-gradient(90deg, #e07712, #fd9d42)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent',
+          textShadow: '0 1px 2px rgba(171, 83, 0, 0.05)'
         }}
       >
-        Loading EasyCook<Text span component="span" style={{ fontFamily: '"Nunito", sans-serif', fontWeight: 600, opacity: 0.8 }}>AI</Text>...
+        Loading EasyCook<Text span component="span" style={{ fontFamily: '"Nunito", sans-serif', fontWeight: 600, opacity: 0.9 }}>AI</Text>...
       </Text>
     </Stack>
   </Center>
@@ -150,10 +158,193 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    // Redirect to landing page if not logged in
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
+};
+
+// New Layout for the main application using AppShell
+const MainAppLayout = () => {
+  const location = useLocation(); // Get current location
+
+  // Helper to check if a link is active
+  const isActive = (path: string) => location.pathname.startsWith(path);
+
+  return (
+    <AppShell
+      header={{ height: 70 }}
+      padding="md"
+      style={{ background: theme.colors.background?.[0] || '#fdfdfd' }} // Add a default background
+    >
+      <AppShell.Header style={{ 
+        background: 'linear-gradient(135deg, #e07712 0%, #fd9d42 55%, #ffc93a 100%)',
+        boxShadow: '0 2px 10px rgba(171, 83, 0, 0.15)',
+        border: 'none' 
+      }}>
+        <Container size="lg" h="100%">
+          <Group h="100%" justify="space-between">
+            <Group gap="lg" h="100%" align="center">
+              {/* Logo */}
+              <UnstyledButton component={Link} to="/app" style={{ textDecoration: 'none' }}>
+                <Text 
+                  fw={800} 
+                  size="xl" 
+                  c="white"
+                  style={{
+                    fontFamily: '"Playfair Display", serif',
+                    letterSpacing: '-0.01em',
+                    textShadow: '0 1px 3px rgba(171, 83, 0, 0.2)'
+                  }}
+                >
+                  EasyCook<Text component="span" c="rgba(255,255,255,0.8)" span fw={600} style={{ fontFamily: '"Nunito", sans-serif' }}>AI</Text>
+                </Text>
+              </UnstyledButton>
+              
+              {/* Navigation Links */}
+              <Group gap={0} style={{ height: '100%' }}> 
+                <Button 
+                  component={Link} 
+                  to="/app/cookbook" // Updated path
+                  variant="subtle" 
+                  color="white"
+                  size="md"
+                  fw={600}
+                  px="lg" // Increased padding
+                  leftSection={<IconBook size={16} />} // Added Icon
+                  data-active={isActive('/app/cookbook')} // Active state check
+                  style={{ 
+                    borderRadius: 0,
+                    height: '70px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                    borderBottom: isActive('/app/cookbook') ? '3px solid white' : '3px solid transparent',
+                    transition: 'border-color 0.2s ease, background-color 0.2s ease'
+                  }}
+                  styles={(theme) => ({
+                     root: {
+                       '&:hover': {
+                         backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                       },
+                     },
+                     inner: { height: '100%' },
+                     section: { marginRight: theme.spacing.xs }
+                   })}
+                >
+                  Cookbook
+                </Button>
+                <Button 
+                  component={Link} 
+                  to="/app/planning" // Updated path
+                  variant="subtle"
+                  color="white"
+                  size="md"
+                  fw={600}
+                  px="lg" // Increased padding
+                  leftSection={<IconCalendar size={16} />} // Added Icon
+                  data-active={isActive('/app/planning')} // Active state check
+                  style={{ 
+                    borderRadius: 0,
+                    height: '70px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                    borderBottom: isActive('/app/planning') ? '3px solid white' : '3px solid transparent',
+                    transition: 'border-color 0.2s ease, background-color 0.2s ease'
+                  }}
+                   styles={(theme) => ({
+                     root: {
+                       '&:hover': {
+                         backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                       },
+                     },
+                     inner: { height: '100%' },
+                     section: { marginRight: theme.spacing.xs }
+                   })}
+                >
+                  Planning
+                </Button>
+                <Button 
+                  component={Link} 
+                  to="/app/execution" // Updated path
+                  variant="subtle"
+                  color="white"
+                  size="md"
+                  fw={600}
+                  px="lg" // Increased padding
+                  leftSection={<IconToolsKitchen2 size={16} />} // Added Icon
+                  data-active={isActive('/app/execution')} // Active state check
+                  style={{ 
+                    borderRadius: 0,
+                    height: '70px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                    borderBottom: isActive('/app/execution') ? '3px solid white' : '3px solid transparent',
+                    transition: 'border-color 0.2s ease, background-color 0.2s ease'
+                  }}
+                   styles={(theme) => ({
+                     root: {
+                       '&:hover': {
+                         backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                       },
+                     },
+                     inner: { height: '100%' },
+                     section: { marginRight: theme.spacing.xs }
+                   })}
+                >
+                  Today's Meals
+                </Button>
+                <Button 
+                  component={Link} 
+                  to="/app/grocery" // Updated path
+                  variant="subtle"
+                  color="white"
+                  size="md"
+                  fw={600}
+                  px="lg" // Increased padding
+                  leftSection={<IconShoppingCart size={16} />}
+                  data-active={isActive('/app/grocery')} // Active state check
+                  style={{ 
+                    borderRadius: 0,
+                    height: '70px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                    borderBottom: isActive('/app/grocery') ? '3px solid white' : '3px solid transparent',
+                    transition: 'border-color 0.2s ease, background-color 0.2s ease'
+                  }}
+                   styles={(theme) => ({
+                     root: {
+                       '&:hover': {
+                         backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                       },
+                     },
+                     inner: { height: '100%' },
+                     section: { marginRight: theme.spacing.xs }
+                   })}
+                >
+                  Grocery List
+                </Button>
+              </Group>
+            </Group>
+            
+            <UserMenu /> {/* Include User Menu in the header */}
+          </Group>
+        </Container>
+      </AppShell.Header>
+
+      <AppShell.Main>
+        <Outlet /> {/* Renders the matched nested route component */}
+      </AppShell.Main>
+    </AppShell>
+  );
 };
 
 function App() {
@@ -161,146 +352,35 @@ function App() {
     <MantineProvider theme={theme} defaultColorScheme="light">
       <AuthProvider>
         <BrowserRouter>
-          <AppShell
-            header={{ height: 70 }}
-            padding="md"
-          >
-            <AppShell.Header style={{ 
-              background: 'linear-gradient(135deg, #e07712 0%, #fd9d42 55%, #ffc93a 100%)',
-              boxShadow: '0 2px 10px rgba(171, 83, 0, 0.15)',
-              border: 'none' 
-            }}>
-              <Container size="lg" h="100%">
-                <Group h="100%" justify="space-between">
-                  <Group gap="xs" h="100%" align="center">
-                    <Text 
-                      fw={800} 
-                      size="xl" 
-                      c="white"
-                      mr="md"
-                      style={{
-                        fontFamily: '"Playfair Display", serif',
-                        letterSpacing: '-0.01em',
-                        textShadow: '0 1px 3px rgba(171, 83, 0, 0.2)'
-                      }}
-                    >
-                      EasyCook<Text component="span" c="rgba(255,255,255,0.8)" span fw={600} style={{ fontFamily: '"Nunito", sans-serif' }}>AI</Text>
-                    </Text>
-                    
-                    <Button 
-                      component={Link} 
-                      to="/" 
-                      variant="subtle" 
-                      color="white"
-                      size="md"
-                      fw={600}
-                      styles={{
-                        root: {
-                          ':hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                          }
-                        }
-                      }}
-                    >
-                      Cookbook
-                    </Button>
-                    <Button 
-                      component={Link} 
-                      to="/planning" 
-                      variant="subtle"
-                      color="white"
-                      size="md"
-                      fw={600}
-                      styles={{
-                        root: {
-                          ':hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                          }
-                        }
-                      }}
-                    >
-                      Planning
-                    </Button>
-                    <Button 
-                      component={Link} 
-                      to="/execution" 
-                      variant="subtle"
-                      color="white"
-                      size="md"
-                      fw={600}
-                      styles={{
-                        root: {
-                          ':hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                          }
-                        }
-                      }}
-                    >
-                      Today's Meals
-                    </Button>
-                    <Button 
-                      component={Link} 
-                      to="/grocery" 
-                      variant="subtle"
-                      color="white"
-                      size="md"
-                      fw={600}
-                      leftSection={<IconShoppingCart size={16} />}
-                      styles={{
-                        root: {
-                          ':hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                          }
-                        }
-                      }}
-                    >
-                      Grocery List
-                    </Button>
-                  </Group>
-                  
-                  <UserMenu />
-                </Group>
-              </Container>
-            </AppShell.Header>
+          {/* Use Routes instead of AppShell directly */}
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<LoginScreen />} />
+            <Route path="/login" element={<LoginScreen />} />
 
-            <AppShell.Main>
-              <Routes>
-                <Route path="/login" element={<LoginScreen />} />
-                <Route
-                  path="/"
-                  element={
-                    <ProtectedRoute>
-                      <CookbookScreen />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/planning"
-                  element={
-                    <ProtectedRoute>
-                      <PlanningScreen />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/execution"
-                  element={
-                    <ProtectedRoute>
-                      <ExecutionScreen />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/grocery"
-                  element={
-                    <ProtectedRoute>
-                      <GroceryListScreen />
-                    </ProtectedRoute>
-                  }
-                />
-              </Routes>
-            </AppShell.Main>
-          </AppShell>
+            {/* Protected Application Routes */}
+            <Route 
+              path="/app" 
+              element={
+                <ProtectedRoute>
+                  <MainAppLayout /> 
+                </ProtectedRoute>
+              }
+            >
+              {/* Default route for /app */}
+              <Route index element={<Navigate to="cookbook" replace />} /> 
+              {/* Nested routes within MainAppLayout */}
+              <Route path="cookbook" element={<CookbookScreen />} />
+              <Route path="planning" element={<PlanningScreen />} />
+              <Route path="execution" element={<ExecutionScreen />} />
+              <Route path="grocery" element={<GroceryListScreen />} />
+              {/* Add other protected routes here */}
+            </Route>
+            
+            {/* Fallback for unknown routes (optional) */}
+            {/* <Route path="*" element={<NotFoundScreen />} /> */}
+
+          </Routes>
         </BrowserRouter>
       </AuthProvider>
     </MantineProvider>

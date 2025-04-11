@@ -758,10 +758,15 @@ export const GroceryListScreen = () => {
                           <Group justify="space-between">
                             <Badge 
                               size="lg" 
+                              variant="filled"
                               color={
-                                meal.type === "Breakfast" ? "orange" : 
-                                meal.type === "Lunch" ? "blue" : "indigo"
+                                meal.type === "Breakfast" ? "pumpkinOrange" : 
+                                meal.type === "Lunch" ? "tagBlue" : "grape"
                               }
+                              style={{
+                                fontWeight: 600,
+                                boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                              }}
                             >
                               {meal.type}
                             </Badge>
@@ -770,7 +775,7 @@ export const GroceryListScreen = () => {
                           <Title order={3} fw={600}>{meal.recipe}</Title>
                           
                           <Group justify="space-between" mt="auto">
-                            <Text size="sm" c="dimmed">
+                            <Text size="sm" c="#5b4f3f" fw={500}>
                               {isToday(dateGroup.dateObj) 
                                 ? 'Today' 
                                 : isTomorrow(dateGroup.dateObj)
@@ -798,13 +803,13 @@ export const GroceryListScreen = () => {
                 <Text size="md" fw={500}>
                   Organizing ingredients by category...
                 </Text>
-                <Badge color="green" variant="light" size="lg" mt="xs">
+                <Badge color="herbGreen" variant="filled" size="lg" mt="xs" style={{ fontWeight: 600 }}>
                   <Group gap={6}>
                     <IconInfoCircle size={14} />
                     <Text size="xs">Feel free to navigate to other screens - processing will continue in the background</Text>
                   </Group>
                 </Badge>
-                <Text size="sm" mt="md" c="dimmed">
+                <Text size="sm" mt="md" c="#5b4f3f" fw={500}>
                   When you return to this screen, your grocery list will be automatically displayed.
                 </Text>
                 

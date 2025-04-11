@@ -611,7 +611,7 @@ export const CookbookScreen = () => {
         {recipe.tags && recipe.tags.length > 0 && (
           <Group gap="xs">
             {recipe.tags.map((tag, index) => (
-              <Badge key={index} color="blue" variant="light">
+              <Badge key={index} variant="tag">
                 {tag}
               </Badge>
             ))}
@@ -741,7 +741,7 @@ export const CookbookScreen = () => {
               "{healthQuotes[currentQuoteIndex].text}"
             </Text>
             {healthQuotes[currentQuoteIndex].author && (
-              <Text size="sm" c="dimmed" ta="center" mt="xs">
+              <Text size="sm" c="#5b4f3f" ta="center" mt="xs" fw={500}>
                 — {healthQuotes[currentQuoteIndex].author}
               </Text>
             )}
@@ -787,10 +787,10 @@ export const CookbookScreen = () => {
                   <Text size="sm" fw={500} c="blue.7">Feel free to navigate to other screens - your recipe will be processed in the background</Text>
                 </Group>
                 <Group gap="xs" mt="xs">
-                  <Badge color="green" variant="light" size="lg">
+                  <Badge color="herbGreen" variant="filled" size="lg">
                     <Group gap={6}>
                       <IconCheck size={14} />
-                      <Text size="xs">Background Processing Active</Text>
+                      <Text size="xs" fw={600}>Background Processing Active</Text>
                     </Group>
                   </Badge>
                 </Group>
@@ -808,7 +808,7 @@ export const CookbookScreen = () => {
                 </Group>
                 
                 <div>
-                  <Text fw={500} size="sm" c="dimmed" mb="xs">Ingredients:</Text>
+                  <Text fw={600} size="sm" c="#5b4f3f" mb="xs">Ingredients:</Text>
                   <List spacing="xs">
                     {currentRecipe.ingredients.map((ingredient, index) => (
                       <List.Item key={index}>
@@ -821,7 +821,7 @@ export const CookbookScreen = () => {
                 </div>
 
                 <div>
-                  <Text fw={500} size="sm" c="dimmed" mb="xs">Procedure:</Text>
+                  <Text fw={600} size="sm" c="#5b4f3f" mb="xs">Procedure:</Text>
                   <List type="ordered" spacing="xs">
                     {currentRecipe.procedure.map((step, index) => {
                       const timestamp = currentRecipe.timestamps?.find(t => t.step === index + 1);
@@ -831,7 +831,7 @@ export const CookbookScreen = () => {
                             <Text size="sm" style={{ flex: 1 }}>{step.replace(`Step ${index + 1}: `, '')}</Text>
                             {timestamp && timestamp.url && (
                               <Badge 
-                                color="blue" 
+                                color="tagBlue" 
                                 variant="light"
                                 component="a"
                                 href={timestamp.url}
@@ -857,19 +857,24 @@ export const CookbookScreen = () => {
                 {/* Recipe Tags Section */}
                 <Stack gap="xs">
                   <Text size="sm" fw={500}>Recipe Tags</Text>
-                  <Text size="xs" c="dimmed">Auto-selected tags based on recipe content. Click to toggle.</Text>
+                  <Text size="xs" c="#5b4f3f" fw={500}>Auto-selected tags based on recipe content. Click to toggle.</Text>
                   
                   <Group gap="xs">
                     {availableTags.map((tag) => (
                       <Badge
                         key={tag}
                         size="lg"
-                        color={selectedTags.includes(tag) ? "blue" : "gray"}
-                        variant={selectedTags.includes(tag) ? "filled" : "light"}
+                        variant={selectedTags.includes(tag) ? "tag" : "filled"}
+                        color={selectedTags.includes(tag) ? undefined : "warmNeutral"}
                         onClick={() => toggleTag(tag)}
                         style={{
                           cursor: 'pointer',
-                          transition: 'all 0.2s ease'
+                          transition: 'all 0.2s ease',
+                          ...(selectedTags.includes(tag) ? {} : {
+                            backgroundColor: 'rgba(91, 79, 63, 0.15)',
+                            color: '#5b4f3f',
+                            fontWeight: 600
+                          })
                         }}
                       >
                         {tag}
@@ -1163,7 +1168,7 @@ export const CookbookScreen = () => {
                 {recipe.tags && recipe.tags.length > 0 && (
                   <Group gap="xs" wrap="wrap">
                     {recipe.tags.map((tag, tagIndex) => (
-                      <Badge key={tagIndex} variant="light" color="blue">
+                      <Badge key={tagIndex} variant="tag">
                         {tag}
                       </Badge>
                     ))}
@@ -1214,7 +1219,7 @@ export const CookbookScreen = () => {
 
                 <Group position="apart" my="md">
                   <Group>
-                    <Badge color="blue" size="md" radius="sm" variant="filled">
+                    <Badge color="tagBlue" size="md" radius="sm" variant="filled">
                       <Group gap={4}>
                         <Text size="xs" fw={500}>Serves {recipe.servings}</Text>
                       </Group>
@@ -1227,10 +1232,10 @@ export const CookbookScreen = () => {
                     </Badge>
                   </Group>
                   
-                  <Badge color="gray" size="md" radius="sm" variant="light">
+                  <Badge color="warmNeutral" size="md" radius="sm" variant="filled">
                     <Group gap={4}>
                       <IconClock size={12} /> 
-                      <Text size="xs">{new Date(recipe.metadata?.processingDate || new Date()).toLocaleDateString()}</Text>
+                      <Text size="xs" fw={600}>{new Date(recipe.metadata?.processingDate || new Date()).toLocaleDateString()}</Text>
                     </Group>
                   </Badge>
                 </Group>
